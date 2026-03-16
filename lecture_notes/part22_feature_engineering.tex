@@ -10,13 +10,17 @@
 
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0.6em}
+\setlist[itemize]{leftmargin=*}
+\setlist[enumerate]{leftmargin=*}
+
+\newcommand{\answerlines}[1]{\vspace{#1\baselineskip}}
 
 \pagestyle{fancy}
 \fancyhf{}
 \IfFileExists{lastpage.sty}{
-  \fancyfoot[C]{Financial Data Science II\ \ \ Updated March 10, 2026\ \ \ Page \thepage\ of \pageref{LastPage}}
+  \fancyfoot[C]{Financial Data Science II\ \ \ Updated March 16, 2026\ \ \ Page \thepage\ of \pageref{LastPage}}
 }{
-  \fancyfoot[C]{Financial Data Science II\ \ \ Updated March 10, 2026\ \ \ Page \thepage}
+  \fancyfoot[C]{Financial Data Science II\ \ \ Updated March 16, 2026\ \ \ Page \thepage}
 }
 
 \begin{document}
@@ -25,107 +29,236 @@
 {\Large \textbf{Part 22: Feature Engineering}}
 \end{center}
 
-\textbf{Part 22: Feature Engineering}
+Data rarely arrive in a form that is immediately suitable for predictive
+analysis. Feature engineering refers to the construction of variables from the
+observed data that may be informative for a forecasting or decision problem.
 
-Feature engineering is the process of transforming raw data into signals
-that are informative for a prediction or decision task. In financial ML,
-this often makes the difference between a backtest that works and a model
-that survives in production.
+In finance this step is especially important. Financial signals are weak,
+relationships change over time, and even small errors in timing can invalidate
+an analysis. Accordingly, the construction of features should be treated as
+part of the modelling problem itself, rather than as a routine preprocessing
+step.
 
-The focus in this note is on feature construction, validation, and
-organization of a feature library for predictive modeling.
+Here we consider predictive features built from historical market data. A later
+treatment could consider factor models, long-short portfolio construction, and
+the relation between factor exposures and tradeable signals.
 
-\section*{Core Principles}
+\textbf{Exercise.} Give three examples of raw data encountered in finance and
+explain how each could be transformed into a useful feature for prediction.
 
-\begin{itemize}[leftmargin=*]
-  \item \textbf{Causality and timing:} Features must be computable at the
-  prediction time. Any accidental use of future information creates
-  lookahead bias.
-  \item \textbf{Stability:} Favor features whose relationship to the target
-  is stable across time and regimes.
-  \item \textbf{Interpretability:} When possible, maintain financial
-  intuition for each feature family.
-  \item \textbf{Cost awareness:} Favor features that can be computed cheaply
-  and consistently at scale.
-\end{itemize}
+\answerlines{6}
 
-\section*{Feature Families}
+\newpage
 
-\textbf{1. Returns and Momentum}
+\section*{Basic Terms}
 
-\begin{itemize}[leftmargin=*]
-  \item Simple and log returns at multiple horizons
-  \item Momentum and risk-adjusted momentum
-  \item Acceleration of returns or momentum
-\end{itemize}
+A \textbf{feature} (or \textbf{predictor}) is a variable used to predict some
+future quantity. A \textbf{target} (or \textbf{response}) is the quantity to be
+forecast. A \textbf{forecast horizon} is the time between the observation of
+the feature and the measurement of the target.
 
-\textbf{2. Volatility and Risk}
+In daily equity modelling, one common target is a 5-day forward return. In
+microstructure analysis, one common target is the next movement of the
+mid-price. These are different problems and generally require different feature
+sets.
 
-\begin{itemize}[leftmargin=*]
-  \item Rolling volatility (standard and exponential)
-  \item Volatility of volatility
-  \item Drawdown and time since peak
-  \item ATR and normalized range
-\end{itemize}
+We also distinguish between:
 
-\textbf{3. Trend and Technical Indicators}
-
-\begin{itemize}[leftmargin=*]
-  \item Moving averages and ratios
-  \item RSI, MACD, Bollinger features
-  \item Trend strength and regime proxies
-\end{itemize}
-
-\textbf{4. Liquidity and Volume}
-
-\begin{itemize}[leftmargin=*]
-  \item Volume z-scores and volume ratios
-  \item Dollar volume and liquidity proxies
-  \item OBV / VPT style cumulative volume signals
-\end{itemize}
-
-\textbf{5. Cross-Asset Features}
-
-\begin{itemize}[leftmargin=*]
-  \item Rolling correlation with benchmark
-  \item Beta and alpha versus benchmark
-  \item Relative momentum vs. index
-\end{itemize}
-
-\section*{Predictive Feature Workflow}
-
-\begin{enumerate}[leftmargin=*]
-  \item \textbf{Define target:} Choose a forward return horizon
-  (e.g., 5d, 20d). Decide regression or directional classification.
-  \item \textbf{Construct features:} Build feature groups above.
-  \item \textbf{Temporal validation:} Walk-forward evaluation and
-  leakage checks. Avoid sample re-use.
-  \item \textbf{Feature screening:} Rank features using linear and nonlinear
-  tests (e.g., F-test and mutual information).
-  \item \textbf{Ablation:} Add feature families one at a time to show
-  incremental out-of-sample value.
+\begin{enumerate}
+  \item \textbf{Clock time:} data aggregated to regular intervals such as one
+  minute or one day.
+  \item \textbf{Event time:} data indexed by market events, such as order
+  submissions, cancellations, or trades.
 \end{enumerate}
+
+Finally, \textbf{lookahead bias} occurs when a feature contains information
+that would not have been available at the prediction time. This is one form of
+\textbf{data leakage}, and it can make a poor model look excellent in
+backtesting.
+
+\textbf{Exercise.} Suppose that you wish to predict a stock's return over the
+next 5 trading days. What information is valid to use on day $t$? What
+information would constitute leakage?
+
+\answerlines{8}
+
+\newpage
+
+\section*{Why Feature Engineering Matters in Finance}
+
+Feature engineering matters in any predictive problem, but several aspects of
+financial data make it especially important here:
+
+\begin{enumerate}
+  \item Financial data are noisy.
+  \item Relationships are often nonstationary.
+  \item Timing matters. A feature that is valid at the daily level may be
+  invalid at the intraday level.
+  \item Useful predictors often arise from economic or market-structure
+  intuition, not from generic transformations alone.
+\end{enumerate}
+
+Thus, a modest model with carefully constructed features can outperform a more
+sophisticated model fitted to weak or misaligned inputs.
+
+\section*{Example Prediction Tasks}
+
+To fix ideas, we consider two examples in this Part.
+
+\begin{enumerate}
+  \item \textbf{Daily equity prediction:} use market and accounting data to
+  predict a forward return over several days.
+  \item \textbf{Limit order book prediction:} use LOBSTER message and order
+  book data to predict short-horizon mid-price direction.
+\end{enumerate}
+
+The first example emphasizes feature families commonly used in equity
+prediction. The second emphasizes market microstructure and the
+difference between event-time data and fixed-interval bars.
+
+\newpage
+
+\section*{Feature Families for Daily Data}
+
+We begin with a standard daily equity example. The objective is not to argue
+that the particular features below are optimal, but to illustrate a systematic
+procedure for constructing and validating daily predictors.
+
+The feature families considered here are:
+
+\begin{enumerate}
+  \item \textbf{Returns and log returns}
+  \item \textbf{Momentum over multiple horizons}
+  \item \textbf{Rolling volatility}
+  \item \textbf{Drawdown}
+  \item \textbf{Valuation ratios such as P/E and P/B}
+  \item \textbf{Cross-asset predictors such as beta, correlation, or relative momentum}
+\end{enumerate}
+
+The point of these features is not merely to create many columns. Each
+predictor should encode an economically or statistically meaningful aspect of
+the price process.
+
+\section*{Feature Families for LOB Data}
+
+We then turn to a limit order book example using LOBSTER data. These
+observations are event-driven: each row corresponds to a market event together
+with a synchronized snapshot of the book.
+
+The feature families considered here are:
+
+\begin{enumerate}
+  \item \textbf{Spread and mid-price}
+  \item \textbf{Level-1 imbalance}
+  \item \textbf{Multi-level depth imbalance}
+  \item \textbf{Order flow imbalance (OFI)}
+  \item \textbf{Microprice deviation}
+  \item \textbf{Message intensity and signed volume}
+\end{enumerate}
+
+These features are intended to summarize short-run pressure from demand and
+supply at the book. Because the underlying data arrive in event time, one must
+decide carefully how to aggregate them when building fixed-interval predictors.
+
+\newpage
+
+\section*{Constructing the Target}
+
+Suppose that $P_t$ denotes a daily adjusted close price. A standard forward
+return target with horizon $h$ is
+\[
+Y_t = \frac{P_{t+h}}{P_t} - 1.
+\]
+
+This target uses future prices by construction, but only on the right-hand side
+of the modelling problem. The features used to predict $Y_t$ must be based only
+on information available at time $t$.
+
+For the LOB example, a simple directional target is
+\[
+Y_t =
+\begin{cases}
+1 & \text{if the next mid-price exceeds the current mid-price},\\
+0 & \text{otherwise.}
+\end{cases}
+\]
+
+\textbf{Exercise.} Explain why the following split is inappropriate for a
+time-series forecasting problem:
+
+\begin{verbatim}
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+\end{verbatim}
+
+\answerlines{6}
+
+\section*{Temporal Validation}
+
+For the daily regression problem, one may report RMSE, MAE, and $R^2$. In
+finance it is often also useful to report a directional metric, such as sign
+accuracy.
+
+For the LOB classification problem, raw accuracy can be misleading when the
+classes are imbalanced. In that setting, \textbf{balanced accuracy} and
+\textbf{AUC} can be more informative.
+
+In both settings, the validation scheme should preserve temporal order. A
+walk-forward or rolling-origin split is generally preferred.
+
+\newpage
+
+\section*{What Makes a Feature Useful?}
+
+A useful feature need not have a large marginal correlation with the target.
+More generally, a feature is attractive when it satisfies several criteria at
+once:
+
+\begin{enumerate}
+  \item it carries predictive information
+  \item it remains reasonably stable across time or regimes
+  \item it is interpretable
+  \item it can be computed in real time
+  \item it survives practical constraints such as trading cost, latency, or
+  limited data availability
+\end{enumerate}
+
+This is why feature engineering is better viewed as a modelling discipline than
+as a list of formulas.
 
 \section*{Exercises}
 
-\textbf{Exercise 1.} Build a small feature set with returns, volatility,
-RSI, and drawdown. Use a 5-day forward return target and compare
-walk-forward performance for each feature family.
+\textbf{Exercise 1.} Add rolling moving-average ratios to the daily feature set.
+Re-run the daily evaluation and compare the results to those obtained from the
+baseline set of return, momentum, volatility, and drawdown features.
 
-\textbf{Exercise 2.} Add a cross-asset benchmark feature (beta vs. SPY)
-for the same target. Measure whether it improves out-of-sample MSE or
-hit rate.
+\answerlines{6}
 
-\section*{Notes and Code References}
+\textbf{Exercise 2.} In a daily equity example, explain why accounting
+variables can create timing problems even when they appear to be aligned by
+date.
 
-A working feature library and example scripts are in:
+\answerlines{6}
 
-\begin{itemize}[leftmargin=*]
-  \item \texttt{/Users/harold/4. RA work/yfinance\_feature\_engineering}
-  \item \texttt{/Users/harold/4. RA work/FACTOR\_TRAINING\_CHI}
-\end{itemize}
+\textbf{Exercise 3.} In a LOBSTER example, compare level-1 imbalance and OFI.
+Which is easier to interpret economically? Which appears more useful empirically?
 
-These repositories include implementations of the feature families
-listed above, along with walk-forward validation and feature ranking.
+\answerlines{6}
+
+\textbf{Exercise 4.} Suppose that the LOBSTER data are aggregated using the
+ceiling of the event time rather than the floor. Explain why this may create
+leakage.
+
+\answerlines{6}
+
+\section*{References}
+
+\begin{enumerate}
+  \item Cont, Kukanov, and Stoikov (2013), \textit{The Price Impact of Order Book Events}.
+  \item Gould, Porter, Williams, McDonald, Fenn, and Howison (2013), \textit{Limit Order Books}.
+  \item LOBSTER documentation and sample files.
+  \item Little and Rubin, \textit{Statistical Analysis with Missing Data}.
+  \item Lopez de Prado, \textit{Advances in Financial Machine Learning}.
+\end{enumerate}
 
 \end{document}
