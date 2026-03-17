@@ -1,5 +1,6 @@
 # Jupyter
 .ipynb_checkpoints/
+__pycache__/
 
 # LaTeX build artifacts
 *.aux
@@ -9,7 +10,10 @@
 *.fls
 *.synctex.gz
 *.pdf
+!lecture_notes/*.pdf
+!lecture_notes/*_lecture.pdf
 
 # LOBSTER data (licensed)
 lobster_samples/
 LOBSTER_*.zip
+.cache/

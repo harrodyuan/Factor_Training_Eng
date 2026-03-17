@@ -18,9 +18,9 @@
 \pagestyle{fancy}
 \fancyhf{}
 \IfFileExists{lastpage.sty}{
-  \fancyfoot[C]{Financial Data Science II\ \ \ Updated March 16, 2026\ \ \ Page \thepage\ of \pageref{LastPage}}
+  \fancyfoot[C]{Financial Data Science II\ \ \ Updated March 17, 2026\ \ \ Page \thepage\ of \pageref{LastPage}}
 }{
-  \fancyfoot[C]{Financial Data Science II\ \ \ Updated March 16, 2026\ \ \ Page \thepage}
+  \fancyfoot[C]{Financial Data Science II\ \ \ Updated March 17, 2026\ \ \ Page \thepage}
 }
 
 \begin{document}
@@ -33,15 +33,20 @@ Data rarely arrive in a form that is immediately suitable for predictive
 analysis. Feature engineering refers to the construction of variables from the
 observed data that may be informative for a forecasting or decision problem.
 
-In finance this step is especially important. Financial signals are weak,
-relationships change over time, and even small errors in timing can invalidate
-an analysis. Accordingly, the construction of features should be treated as
-part of the modelling problem itself, rather than as a routine preprocessing
-step.
+In finance this step is especially important. Signals are weak, relationships
+change over time, and even small errors in timing can invalidate an analysis.
+Accordingly, the construction of features should be treated as part of the
+modelling problem itself, rather than as a routine preprocessing step.
 
-Here we consider predictive features built from historical market data. A later
-treatment could consider factor models, long-short portfolio construction, and
-the relation between factor exposures and tradeable signals.
+The emphasis in this Part is on two settings:
+
+\begin{enumerate}
+  \item daily equity prediction using market and accounting data
+  \item short-horizon prediction using limit order book data
+\end{enumerate}
+
+Part 23 takes the next step and considers how such features may be screened,
+compared, and validated.
 
 \textbf{Exercise.} Give three examples of raw data encountered in finance and
 explain how each could be transformed into a useful feature for prediction.
@@ -95,44 +100,46 @@ financial data make it especially important here:
   \item Timing matters. A feature that is valid at the daily level may be
   invalid at the intraday level.
   \item Useful predictors often arise from economic or market-structure
-  intuition, not from generic transformations alone.
+  considerations, not from generic transformations alone.
 \end{enumerate}
 
 Thus, a modest model with carefully constructed features can outperform a more
 sophisticated model fitted to weak or misaligned inputs.
+
+\section*{Data Sources and Timing}
+
+In the examples below we use three broad kinds of information.
+
+\begin{enumerate}
+  \item \textbf{Daily market data:} open, high, low, close, adjusted close, and volume.
+  \item \textbf{Accounting data:} quarterly statements used to form rough valuation ratios such as P/E and P/B.
+  \item \textbf{Limit order book data:} event-level message and order book files from LOBSTER.
+\end{enumerate}
+
+These sources do not arrive on the same schedule. Market prices are observed
+continuously. Accounting variables are released with delay. Order book data are
+recorded in event time rather than at fixed intervals. The timing convention is
+therefore part of the feature definition.
 
 \section*{Example Prediction Tasks}
 
 To fix ideas, we consider two examples in this Part.
 
 \begin{enumerate}
-  \item \textbf{Daily equity prediction:} use market and accounting data to
-  predict a forward return over several days.
-  \item \textbf{Limit order book prediction:} use LOBSTER message and order
-  book data to predict short-horizon mid-price direction.
+  \item \textbf{Daily equity prediction:} use market and accounting data to predict a forward return over several days.
+  \item \textbf{Limit order book prediction:} use LOBSTER message and order book data to predict short-horizon mid-price direction.
 \end{enumerate}
-
-The first example emphasizes feature families commonly used in equity
-prediction. The second emphasizes market microstructure and the
-difference between event-time data and fixed-interval bars.
-
-\newpage
 
 \section*{Feature Families for Daily Data}
 
-We begin with a standard daily equity example. The objective is not to argue
-that the particular features below are optimal, but to illustrate a systematic
-procedure for constructing and validating daily predictors.
-
-The feature families considered here are:
+The daily example uses the following feature families:
 
 \begin{enumerate}
-  \item \textbf{Returns and log returns}
-  \item \textbf{Momentum over multiple horizons}
-  \item \textbf{Rolling volatility}
-  \item \textbf{Drawdown}
-  \item \textbf{Valuation ratios such as P/E and P/B}
-  \item \textbf{Cross-asset predictors such as beta, correlation, or relative momentum}
+  \item returns and log returns
+  \item momentum over multiple horizons
+  \item rolling volatility
+  \item drawdown
+  \item valuation ratios such as P/E and P/B
 \end{enumerate}
 
 The point of these features is not merely to create many columns. Each
@@ -141,24 +148,26 @@ the price process.
 
 \section*{Feature Families for LOB Data}
 
-We then turn to a limit order book example using LOBSTER data. These
-observations are event-driven: each row corresponds to a market event together
-with a synchronized snapshot of the book.
-
-The feature families considered here are:
+The LOB example uses the following feature families:
 
 \begin{enumerate}
-  \item \textbf{Spread and mid-price}
-  \item \textbf{Level-1 imbalance}
-  \item \textbf{Multi-level depth imbalance}
-  \item \textbf{Order flow imbalance (OFI)}
-  \item \textbf{Microprice deviation}
-  \item \textbf{Message intensity and signed volume}
+  \item spread and mid-price
+  \item level-1 imbalance
+  \item multi-level depth imbalance
+  \item order flow imbalance (OFI)
+  \item microprice deviation
+  \item message intensity and signed volume
 \end{enumerate}
 
-These features are intended to summarize short-run pressure from demand and
-supply at the book. Because the underlying data arrive in event time, one must
-decide carefully how to aggregate them when building fixed-interval predictors.
+These features summarize short-run pressure from demand and supply at the book.
+Because the underlying data arrive in event time, one must decide carefully how
+to aggregate them when building fixed-interval predictors.
+
+\textbf{Exercise.} For each of the two examples above, identify one feature
+that would be easy to compute but likely uninformative, and one feature that is
+harder to compute but may be economically meaningful.
+
+\answerlines{6}
 
 \newpage
 
@@ -178,7 +187,7 @@ For the LOB example, a simple directional target is
 \[
 Y_t =
 \begin{cases}
-1 & \text{if the next mid-price exceeds the current mid-price},\\
+1 & \text{if the next mid-price exceeds the current mid-price,}\\
 0 & \text{otherwise.}
 \end{cases}
 \]
@@ -219,8 +228,7 @@ once:
   \item it remains reasonably stable across time or regimes
   \item it is interpretable
   \item it can be computed in real time
-  \item it survives practical constraints such as trading cost, latency, or
-  limited data availability
+  \item it survives practical constraints such as trading cost, latency, or limited data availability
 \end{enumerate}
 
 This is why feature engineering is better viewed as a modelling discipline than
@@ -257,8 +265,7 @@ leakage.
   \item Cont, Kukanov, and Stoikov (2013), \textit{The Price Impact of Order Book Events}.
   \item Gould, Porter, Williams, McDonald, Fenn, and Howison (2013), \textit{Limit Order Books}.
   \item LOBSTER documentation and sample files.
-  \item Little and Rubin, \textit{Statistical Analysis with Missing Data}.
-  \item Lopez de Prado, \textit{Advances in Financial Machine Learning}.
+  \item Lopez de Prado (2018), \textit{Advances in Financial Machine Learning}.
 \end{enumerate}
 
 \end{document}

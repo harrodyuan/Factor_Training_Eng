@@ -1,0 +1,187 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fancyhdr}
+\IfFileExists{lastpage.sty}{\usepackage{lastpage}}{}
+\usepackage{hyperref}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+\setlist[itemize]{leftmargin=*}
+\setlist[enumerate]{leftmargin=*}
+
+\newcommand{\answerlines}[1]{\vspace{#1\baselineskip}}
+
+\pagestyle{fancy}
+\fancyhf{}
+\IfFileExists{lastpage.sty}{
+  \fancyfoot[C]{Financial Data Science II\ \ \ Updated March 17, 2026\ \ \ Page \thepage\ of \pageref{LastPage}}
+}{
+  \fancyfoot[C]{Financial Data Science II\ \ \ Updated March 17, 2026\ \ \ Page \thepage}
+}
+
+\begin{document}
+
+\begin{center}
+{\Large \textbf{Part 23: Feature Selection and Temporal Validation}}
+\end{center}
+
+Part 22 focused on the construction of candidate predictors. The next task is
+to determine which of those predictors are worth keeping.
+
+In financial modelling this step cannot be reduced to a single ranking rule. A
+feature may look useful in sample and fail out of sample. A feature may also be
+statistically related to the target but impossible to compute in real time.
+
+For that reason, feature selection is best viewed as a sequence of screens
+rather than as a single algorithm.
+
+\textbf{Exercise.} Explain the difference between the following statements:
+
+\begin{enumerate}
+  \item a feature is correlated with the target in sample
+  \item a feature is useful in a predictive model
+\end{enumerate}
+
+\answerlines{5}
+
+\newpage
+
+\section*{Basic Terms}
+
+A \textbf{screening rule} is a preliminary rule used to reduce a large
+candidate set. A \textbf{selection rule} determines which features are kept for
+modelling. \textbf{Redundancy} refers to overlap in the information carried by
+different features. \textbf{Stability} refers to whether a feature behaves
+similarly across periods or regimes. An \textbf{ablation study} compares a
+baseline specification to an expanded one in order to test the incremental
+value of a feature or feature family.
+
+Finally, we distinguish between a \textbf{ranking statistic} and a
+\textbf{modelling objective}. For example, a feature may be ranked by a
+univariate $F$-score or by mutual information, while the final predictive model
+is judged by out-of-sample RMSE, $R^2$, AUC, or some other metric.
+
+\textbf{Exercise.} Why is it possible for two features to rank highly on their
+own but add little value when used together in the same model?
+
+\answerlines{6}
+
+\newpage
+
+\section*{Why Feature Selection is Needed}
+
+Feature selection matters for at least four reasons.
+
+\begin{enumerate}
+  \item Large feature sets can lead to unstable fitted models.
+  \item Many features are redundant transformations of the same underlying signal.
+  \item Financial relationships vary over time, so a feature that works in one period may fail in another.
+  \item Some features are costly to maintain or impossible to compute in a production setting.
+\end{enumerate}
+
+The goal is therefore not to maximize the number of features. The goal is to
+keep the subset that is both informative and usable.
+
+\section*{A Selection Framework}
+
+A practical sequence is the following.
+
+\begin{enumerate}
+  \item Remove features that are infeasible or contaminated by leakage.
+  \item Remove features with too many missing values or too little variation.
+  \item Rank the remaining features using simple univariate measures.
+  \item Check whether the ranking is stable across time.
+  \item Evaluate incremental predictive value using walk-forward validation.
+\end{enumerate}
+
+\section*{Univariate Screening}
+
+In this Part we use two simple ranking statistics:
+
+\begin{enumerate}
+  \item \textbf{$F$-score:} emphasizes linear association with a continuous target.
+  \item \textbf{Mutual information:} allows for more general dependence.
+\end{enumerate}
+
+A convenient summary is the \textbf{combined rank}, defined as the average of
+the rank under each criterion. This is a screening device, not the final
+objective function.
+
+\newpage
+
+\section*{Temporal Stability}
+
+A feature that ranks well over the full sample may do so only because of one
+favorable period. It is therefore useful to check whether a feature retains its
+sign, magnitude, or rank across rolling subsamples.
+
+Stability is not a guarantee of predictive success, but unstable rankings are a
+warning sign. This is particularly important in finance, where the underlying
+relationship between predictors and outcomes is rarely fixed.
+
+\section*{Ablation and Incremental Value}
+
+A useful habit is to compare nested feature sets. One may begin with a simple
+baseline, then add a new feature or feature family and ask whether the
+out-of-sample performance improves.
+
+This is preferable to moving immediately to a large feature set, because it
+makes the contribution of the new information easier to interpret.
+
+\newpage
+
+\section*{What Should Be Reported?}
+
+When presenting a selected feature set, it is useful to report at least the
+following:
+
+\begin{enumerate}
+  \item the original candidate features
+  \item the screening criteria
+  \item the final selected subset
+  \item the validation scheme
+  \item the performance metric
+  \item the incremental contribution of the selected features relative to a simpler baseline
+\end{enumerate}
+
+This makes it easier for a reader to distinguish between a feature that is
+merely interesting and a feature that is useful for a forecasting problem.
+
+\section*{Exercises}
+
+\textbf{Exercise 1.} Give an example of a feature that ranks well by mutual
+information but might still be rejected for practical reasons.
+
+\answerlines{6}
+
+\textbf{Exercise 2.} Suppose that two features have nearly identical combined
+rank values. What additional information would you want before choosing between
+them?
+
+\answerlines{6}
+
+\textbf{Exercise 3.} In a LOB setting, why is it useful to compare a base
+book-state model to a base-plus-OFI model rather than jumping immediately to
+the full feature set?
+
+\answerlines{6}
+
+\textbf{Exercise 4.} Explain why a feature-selection rule based on a shuffled
+train/test split is not appropriate in this setting.
+
+\answerlines{6}
+
+\section*{References}
+
+\begin{enumerate}
+  \item Cont, Kukanov, and Stoikov (2013), \textit{The Price Impact of Order Book Events}.
+  \item Guyon and Elisseeff (2003), \textit{An Introduction to Variable and Feature Selection}.
+  \item Lopez de Prado (2018), \textit{Advances in Financial Machine Learning}.
+  \item LOBSTER documentation and sample files.
+\end{enumerate}
+
+\end{document}
