@@ -29,12 +29,12 @@
 {\Large \textbf{Part 23: Feature Selection and Temporal Validation}}
 \end{center}
 
-Part 22 focused on the construction of candidate predictors. The next task is
-to determine which of those predictors are worth keeping.
+Part 22 considered the construction of candidate predictors. The next task is
+to determine which of those predictors merit further attention.
 
-In financial modelling this step cannot be reduced to a single ranking rule. A
-feature may look useful in sample and fail out of sample. A feature may also be
-statistically related to the target but impossible to compute in real time.
+This is not a mechanical step. A feature may appear useful in sample and fail
+out of sample. A feature may also be statistically related to the target and
+yet be infeasible in real time.
 
 For that reason, feature selection is best viewed as a sequence of screens
 rather than as a single algorithm.
@@ -53,11 +53,11 @@ rather than as a single algorithm.
 \section*{Basic Terms}
 
 A \textbf{screening rule} is a preliminary rule used to reduce a large
-candidate set. A \textbf{selection rule} determines which features are kept for
-modelling. \textbf{Redundancy} refers to overlap in the information carried by
-different features. \textbf{Stability} refers to whether a feature behaves
+candidate set. A \textbf{selection rule} determines which features are retained
+for modelling. \textbf{Redundancy} refers to overlap in the information carried
+by different features. \textbf{Stability} refers to whether a feature behaves
 similarly across periods or regimes. An \textbf{ablation study} compares a
-baseline specification to an expanded one in order to test the incremental
+baseline specification to an expanded one in order to assess the incremental
 value of a feature or feature family.
 
 Finally, we distinguish between a \textbf{ranking statistic} and a
@@ -83,8 +83,8 @@ Feature selection matters for at least four reasons.
   \item Some features are costly to maintain or impossible to compute in a production setting.
 \end{enumerate}
 
-The goal is therefore not to maximize the number of features. The goal is to
-keep the subset that is both informative and usable.
+The goal is not to maximize the number of features. The goal is to retain the
+subset that is informative, stable, and usable.
 
 \section*{A Selection Framework}
 
@@ -108,7 +108,7 @@ In this Part we use two simple ranking statistics:
 \end{enumerate}
 
 A convenient summary is the \textbf{combined rank}, defined as the average of
-the rank under each criterion. This is a screening device, not the final
+the rank under each criterion. This is a screening device, not a final
 objective function.
 
 \newpage
@@ -117,7 +117,7 @@ objective function.
 
 A feature that ranks well over the full sample may do so only because of one
 favorable period. It is therefore useful to check whether a feature retains its
-sign, magnitude, or rank across rolling subsamples.
+rank across rolling subsamples.
 
 Stability is not a guarantee of predictive success, but unstable rankings are a
 warning sign. This is particularly important in finance, where the underlying
@@ -144,12 +144,12 @@ following:
   \item the screening criteria
   \item the final selected subset
   \item the validation scheme
-  \item the performance metric
+  \item the metric by which performance is judged
   \item the incremental contribution of the selected features relative to a simpler baseline
 \end{enumerate}
 
-This makes it easier for a reader to distinguish between a feature that is
-merely interesting and a feature that is useful for a forecasting problem.
+This makes it easier to distinguish between a feature that is merely
+interesting and a feature that is useful for a forecasting problem.
 
 \section*{Exercises}
 

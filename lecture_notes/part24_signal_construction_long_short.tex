@@ -1,0 +1,181 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fancyhdr}
+\IfFileExists{lastpage.sty}{\usepackage{lastpage}}{}
+\usepackage{hyperref}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+\setlist[itemize]{leftmargin=*}
+\setlist[enumerate]{leftmargin=*}
+
+\newcommand{\answerlines}[1]{\vspace{#1\baselineskip}}
+
+\pagestyle{fancy}
+\fancyhf{}
+\IfFileExists{lastpage.sty}{
+  \fancyfoot[C]{Financial Data Science II\ \ \ Updated March 17, 2026\ \ \ Page \thepage\ of \pageref{LastPage}}
+}{
+  \fancyfoot[C]{Financial Data Science II\ \ \ Updated March 17, 2026\ \ \ Page \thepage}
+}
+
+\begin{document}
+
+\begin{center}
+{\Large \textbf{Part 24: Signal Construction and Long-Short Portfolios}}
+\end{center}
+
+Parts 22 and 23 focused on constructing and screening candidate predictors. The
+next task is to map a selected feature set into a trading rule.
+
+A feature is not yet a signal. A signal is a rule for ranking opportunities or
+assigning positions. The same feature can produce very different portfolios
+depending on how it is standardized, combined, and rebalanced.
+
+In this Part we use a simple cross-sectional example to illustrate this
+transition from features to positions.
+
+\textbf{Exercise.} Give an example of a quantity that is useful as a feature
+but not yet well defined as a trading signal. What additional choices are
+needed before it becomes a portfolio rule?
+
+\answerlines{6}
+
+\newpage
+
+\section*{Basic Terms}
+
+A \textbf{signal} is a rule that maps observed data into a trading score or
+position. A \textbf{rebalance date} is a date at which the signal is recomputed
+and the portfolio is updated. The \textbf{long leg} consists of the assets
+receiving positive weight. The \textbf{short leg} consists of the assets
+receiving negative weight. \textbf{Turnover} measures how much the portfolio
+weights change from one rebalance date to the next.
+
+We also distinguish between:
+
+\begin{enumerate}
+  \item \textbf{Cross-sectional signals:} rank many assets at the same time.
+  \item \textbf{Time-series signals:} evaluate one asset relative to its own history.
+\end{enumerate}
+
+The example below is cross-sectional.
+
+\textbf{Exercise.} Why might a feature that works well in a regression problem
+still perform poorly when translated into a long-short portfolio?
+
+\answerlines{6}
+
+\newpage
+
+\section*{Why the Mapping Matters}
+
+Once a feature has been selected, several additional choices remain.
+
+\begin{enumerate}
+  \item Should the feature be standardized within each date?
+  \item Should multiple features be combined additively or in some other way?
+  \item Should the strategy hold the strongest names only, or all names with varying weights?
+  \item How often should the portfolio rebalance?
+  \item How should turnover and implementation cost be handled?
+\end{enumerate}
+
+These are portfolio-design choices rather than feature-engineering choices, but
+they materially affect the final result.
+
+\section*{A Simple Workflow}
+
+A practical sequence is the following.
+
+\begin{enumerate}
+  \item Choose a universe and a rebalance schedule.
+  \item Compute feature values using only information available at the rebalance date.
+  \item Standardize or rank the features cross-sectionally.
+  \item Combine the selected features into a composite signal.
+  \item Map the signal into long and short weights.
+  \item Evaluate return, volatility, Sharpe ratio, and turnover.
+\end{enumerate}
+
+\newpage
+
+\section*{An Illustrative Monthly Long-Short Signal}
+
+For illustration we use a small universe of large US equities. This is a
+convenience sample, not a survivorship-free universe. The point is to
+illustrate the mechanics of signal formation rather than to make strong claims
+about a production strategy.
+
+A simple signal can be constructed from three ingredients:
+
+\begin{enumerate}
+  \item medium-horizon momentum
+  \item shorter-horizon momentum
+  \item volatility and drawdown penalties
+\end{enumerate}
+
+These ingredients may be ranked cross-sectionally and combined into a composite
+score. The portfolio rule then buys the highest-ranked names and shorts the
+lowest-ranked names.
+
+\section*{Interpreting the Example}
+
+Several caveats are important.
+
+\begin{enumerate}
+  \item The universe is small and survivorship-biased.
+  \item No transaction cost model has been applied.
+  \item The weights are intentionally simple.
+  \item The signal weights are chosen for illustration rather than by a formal estimation procedure.
+\end{enumerate}
+
+Even so, the example highlights the main distinction between a feature and a
+portfolio rule. A feature is a candidate piece of information. A signal
+specifies how that information is translated into a ranking and then into
+positions.
+
+\newpage
+
+\section*{Signals in the LOB Setting}
+
+The same logic applies at shorter horizons. A model of next-price direction or
+a short-horizon imbalance measure is not yet a trading rule. One still needs to
+specify thresholds, inventory controls, latency assumptions, and a mapping from
+model output to actual orders.
+
+\section*{Exercises}
+
+\textbf{Exercise 1.} Modify the signal so that the long and short legs each
+contain five assets rather than three. How does turnover change?
+
+\answerlines{6}
+
+\textbf{Exercise 2.} Replace the equal-weight portfolio rule with weights
+proportional to the distance of each score from the cross-sectional median.
+What practical issues arise?
+
+\answerlines{6}
+
+\textbf{Exercise 3.} Suppose that the signal is computed using month-end prices
+but implemented at the close of the same day. Why might this introduce bias?
+
+\answerlines{6}
+
+\textbf{Exercise 4.} Give an example of a feature that may be useful for stock
+selection but difficult to convert into a stable long-short signal.
+
+\answerlines{6}
+
+\section*{References}
+
+\begin{enumerate}
+  \item Grinold and Kahn, \textit{Active Portfolio Management}.
+  \item Jegadeesh and Titman (1993), \textit{Returns to Buying Winners and Selling Losers}.
+  \item Cochrane, \textit{Asset Pricing}.
+  \item Lopez de Prado (2018), \textit{Advances in Financial Machine Learning}.
+\end{enumerate}
+
+\end{document}

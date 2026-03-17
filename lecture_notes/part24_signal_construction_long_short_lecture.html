@@ -3,7 +3,7 @@
 <html lang="en">
 <head><meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>part23_feature_selection_validation</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>part24_signal_construction_long_short</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <style type="text/css">
     pre { line-height: 125%; }
 td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
@@ -7914,51 +7914,48 @@ code, pre, .jp-InputArea-editor {
   }
 }
 </style></head>
-<body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light"><div class="lecture-header"><div class="running-title">Part 23: Feature Selection and Temporal Validation</div><div class="rule"></div><div class="title">Part 23: Feature Selection and Temporal Validation</div><div class="meta">Financial Data Science II    Updated March 17, 2026</div></div><main>
+<body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light"><div class="lecture-header"><div class="running-title">Part 24: Signal Construction and Long-Short Portfolios</div><div class="rule"></div><div class="title">Part 24: Signal Construction and Long-Short Portfolios</div><div class="meta">Financial Data Science II    Updated March 17, 2026</div></div><main>
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f5a98ca7">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9cbf03da">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="Part-23:-Feature-Selection-and-Temporal-Validation">Part 23: Feature Selection and Temporal Validation<a class="anchor-link" href="#Part-23:-Feature-Selection-and-Temporal-Validation">¶</a></h1>
+<h1 id="Part-24:-Signal-Construction-and-Long-Short-Portfolios">Part 24: Signal Construction and Long-Short Portfolios<a class="anchor-link" href="#Part-24:-Signal-Construction-and-Long-Short-Portfolios">¶</a></h1>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0ea1139f">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=198bca7e">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Part 22 considered the construction of candidate predictors.
-The next task is to determine which of those predictors merit further attention.</p>
-<p>This is not a mechanical step.
-A feature may appear useful in sample and fail out of sample.
-A feature may also be statistically related to the target and yet be infeasible in real time.</p>
-<p>For that reason, feature selection is best viewed as a sequence of screens rather than as a single algorithm.</p>
+<p>Parts 22 and 23 focused on constructing and screening candidate predictors.
+The next task is to map a selected feature set into a trading rule.</p>
+<p>A feature is not yet a signal.
+A signal is a rule for ranking opportunities or assigning positions.
+The same feature can produce very different portfolios depending on how it is standardized, combined, and rebalanced.</p>
+<p>In this Part we use a simple cross-sectional example to illustrate this transition from features to positions.</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=21cff026">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=fefa2954">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Exercise.</strong> Explain the difference between the following statements.</p>
-<ol>
-<li>A feature is correlated with the target in sample.</li>
-<li>A feature is useful in a predictive model.</li>
-</ol>
+<p><strong>Exercise.</strong> Give an example of a quantity that is useful as a feature but not yet well defined as a trading signal.
+What additional choices are needed before it becomes a portfolio rule?</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c9247bf8">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=23174015">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7966,87 +7963,82 @@ A feature may also be statistically related to the target and yet be infeasible 
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <div class="lecture-pagebreak"></div>
 <h2 id="Basic-Terms">Basic Terms<a class="anchor-link" href="#Basic-Terms">¶</a></h2><p>We use the following terms in this Part.</p>
-<p>A <strong>screening rule</strong> is a preliminary rule used to reduce a large candidate set.
-A <strong>selection rule</strong> determines which features are retained for modelling.
-<strong>Redundancy</strong> refers to overlap in the information carried by different features.
-<strong>Stability</strong> refers to whether a feature behaves similarly across periods or regimes.
-An <strong>ablation study</strong> compares a baseline specification to an expanded one in order to assess the incremental value of a feature or feature family.</p>
-<p>Finally, we distinguish between a <strong>ranking statistic</strong> and a <strong>modelling objective</strong>.
-For example, a feature may be ranked by a univariate $F$-score or by mutual information, while the final predictive model is judged by out-of-sample RMSE, $R^2$, AUC, or some other metric.</p>
+<p>A <strong>signal</strong> is a rule that maps observed data into a trading score or position.
+A <strong>rebalance date</strong> is a date at which the signal is recomputed and the portfolio is updated.
+The <strong>long leg</strong> consists of the assets receiving positive weight.
+The <strong>short leg</strong> consists of the assets receiving negative weight.
+<strong>Turnover</strong> measures how much the portfolio weights change from one rebalance date to the next.</p>
+<p>We also distinguish between:</p>
+<ol>
+<li><strong>Cross-sectional signals:</strong> rank many assets at the same time.</li>
+<li><strong>Time-series signals:</strong> evaluate one asset relative to its own history.</li>
+</ol>
+<p>The example below is cross-sectional.</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0f6ae1b4">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=db6f6eec">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Exercise.</strong> Why is it possible for two features to rank highly on their own but add little value when used together in the same model?</p>
+<p><strong>Exercise.</strong> Why might a feature that works well in a regression problem still perform poorly when translated into a long-short portfolio?</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ab688247">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=32eb7a77">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <div class="lecture-pagebreak"></div>
-<h2 id="Why-Feature-Selection-is-Needed">Why Feature Selection is Needed<a class="anchor-link" href="#Why-Feature-Selection-is-Needed">¶</a></h2><p>Feature selection matters for at least four reasons.</p>
+<h2 id="Why-the-Mapping-Matters">Why the Mapping Matters<a class="anchor-link" href="#Why-the-Mapping-Matters">¶</a></h2><p>Once a feature has been selected, several additional choices remain.</p>
 <ol>
-<li>Large feature sets can lead to unstable fitted models.</li>
-<li>Many features are redundant transformations of the same underlying signal.</li>
-<li>Financial relationships vary over time, so a feature that works in one period may fail in another.</li>
-<li>Some features are costly to maintain or impossible to compute in a production setting.</li>
+<li>Should the feature be standardized within each date?</li>
+<li>Should multiple features be combined additively or in some other way?</li>
+<li>Should the strategy hold the strongest names only, or all names with varying weights?</li>
+<li>How often should the portfolio rebalance?</li>
+<li>How should turnover and implementation cost be handled?</li>
 </ol>
-<p>The goal is not to maximize the number of features.
-The goal is to retain the subset that is informative, stable, and usable.</p>
-<h2 id="A-Selection-Framework">A Selection Framework<a class="anchor-link" href="#A-Selection-Framework">¶</a></h2><p>A practical sequence is the following.</p>
+<p>These are portfolio-design choices rather than feature-engineering choices, but they materially affect the final result.</p>
+<h2 id="A-Simple-Workflow">A Simple Workflow<a class="anchor-link" href="#A-Simple-Workflow">¶</a></h2><p>A practical sequence is the following.</p>
 <ol>
-<li>Remove features that are infeasible or contaminated by leakage.</li>
-<li>Remove features with too many missing values or too little variation.</li>
-<li>Rank the remaining features using simple univariate measures.</li>
-<li>Check whether the ranking is stable across time.</li>
-<li>Evaluate incremental predictive value using walk-forward validation.</li>
+<li>Choose a universe and a rebalance schedule.</li>
+<li>Compute feature values using only information available at the rebalance date.</li>
+<li>Standardize or rank the features cross-sectionally.</li>
+<li>Combine the selected features into a composite signal.</li>
+<li>Map the signal into long and short weights.</li>
+<li>Evaluate return, volatility, Sharpe ratio, and turnover.</li>
 </ol>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=224554d0">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Univariate-Screening">Univariate Screening<a class="anchor-link" href="#Univariate-Screening">¶</a></h2><p>In this Part we use two simple ranking statistics.</p>
-<ol>
-<li><strong>$F$-score:</strong> emphasizes linear association with a continuous target.</li>
-<li><strong>Mutual information:</strong> allows for more general dependence.</li>
-</ol>
-<p>A convenient summary is the <strong>combined rank</strong>, defined as the average of the rank under each criterion.
-This is a screening device, not a final objective function.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7d084897">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e6f1442f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <div class="lecture-pagebreak"></div>
-<h2 id="Example-A:-Daily-Feature-Screening">Example A: Daily Feature Screening<a class="anchor-link" href="#Example-A:-Daily-Feature-Screening">¶</a></h2><p>We return to the daily equity setting from Part 22.
-For illustration, we construct a modest feature set from prices and rough accounting ratios.
-We then rank the features and compare predictive performance as the feature set expands.</p>
+<h2 id="Example:-A-Monthly-Long-Short-Signal">Example: A Monthly Long-Short Signal<a class="anchor-link" href="#Example:-A-Monthly-Long-Short-Signal">¶</a></h2><p>For illustration we use a small universe of large US equities.
+This is a convenience sample, not a survivorship-free universe.
+The point is to illustrate the mechanics of signal formation rather than to make strong claims about a production strategy.</p>
+<p>We construct three monthly ingredients.</p>
+<ol>
+<li>Medium-horizon momentum.</li>
+<li>Shorter-horizon momentum.</li>
+<li>Volatility and drawdown penalties.</li>
+</ol>
+<p>We then combine these into a composite cross-sectional score and form an equal-weight long-short portfolio.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=a76bbec0">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=c9e0f046">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8059,27 +8051,15 @@ We then rank the features and compare predictive performance as the feature set 
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
-<span class="kn">from</span> <span class="nn">sklearn.feature_selection</span> <span class="kn">import</span> <span class="n">f_regression</span><span class="p">,</span> <span class="n">mutual_info_regression</span>
-<span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LogisticRegression</span><span class="p">,</span> <span class="n">Ridge</span>
-<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">balanced_accuracy_score</span><span class="p">,</span> <span class="n">mean_squared_error</span><span class="p">,</span> <span class="n">r2_score</span><span class="p">,</span> <span class="n">roc_auc_score</span>
-<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">TimeSeriesSplit</span>
-
-<span class="kn">from</span> <span class="nn">lecture_utils</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">build_basic_daily_features</span><span class="p">,</span>
-    <span class="n">build_fundamental_features</span><span class="p">,</span>
-    <span class="n">build_lob_bars</span><span class="p">,</span>
-    <span class="n">build_lob_event_features</span><span class="p">,</span>
-    <span class="n">download_price_history</span><span class="p">,</span>
-    <span class="n">load_lobster_sample</span><span class="p">,</span>
-    <span class="n">locate_lobster_sample</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">lecture_utils</span> <span class="kn">import</span> <span class="n">download_adjusted_close_panel</span>
 </pre></div>
 </div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=cdc4a17e">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=226b73d0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8087,23 +8067,12 @@ We then rank the features and compare predictive performance as the feature set 
 <div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">TICKER</span> <span class="o">=</span> <span class="s1">'AAPL'</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">UNIVERSE</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'AAPL'</span><span class="p">,</span> <span class="s1">'MSFT'</span><span class="p">,</span> <span class="s1">'AMZN'</span><span class="p">,</span> <span class="s1">'GOOG'</span><span class="p">,</span> <span class="s1">'META'</span><span class="p">,</span> <span class="s1">'NVDA'</span><span class="p">,</span> <span class="s1">'JPM'</span><span class="p">,</span> <span class="s1">'XOM'</span><span class="p">,</span> <span class="s1">'JNJ'</span><span class="p">,</span> <span class="s1">'UNH'</span><span class="p">,</span> <span class="s1">'PG'</span><span class="p">,</span> <span class="s1">'HD'</span><span class="p">]</span>
 <span class="n">START</span> <span class="o">=</span> <span class="s1">'2016-01-01'</span>
 <span class="n">END</span> <span class="o">=</span> <span class="s1">'2026-03-01'</span>
 
-<span class="n">px</span> <span class="o">=</span> <span class="n">download_price_history</span><span class="p">(</span><span class="n">TICKER</span><span class="p">,</span> <span class="n">START</span><span class="p">,</span> <span class="n">END</span><span class="p">)</span>
-<span class="n">daily</span> <span class="o">=</span> <span class="n">build_basic_daily_features</span><span class="p">(</span><span class="n">px</span><span class="p">,</span> <span class="n">windows</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span> <span class="mi">63</span><span class="p">))</span>
-
-<span class="n">fund</span> <span class="o">=</span> <span class="n">build_fundamental_features</span><span class="p">(</span><span class="n">TICKER</span><span class="p">,</span> <span class="n">px</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">px</span><span class="p">[</span><span class="s1">'adj_close'</span><span class="p">])</span>
-<span class="k">if</span> <span class="p">{</span><span class="s1">'pe'</span><span class="p">,</span> <span class="s1">'pb'</span><span class="p">}</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">fund</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
-    <span class="n">daily</span> <span class="o">=</span> <span class="n">daily</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fund</span><span class="p">[[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'pe'</span><span class="p">,</span> <span class="s1">'pb'</span><span class="p">]</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">fund</span><span class="o">.</span><span class="n">columns</span><span class="p">]],</span> <span class="n">how</span><span class="o">=</span><span class="s1">'left'</span><span class="p">)</span>
-
-<span class="n">daily</span><span class="p">[</span><span class="s1">'target_fwd_ret_5d'</span><span class="p">]</span> <span class="o">=</span> <span class="n">px</span><span class="p">[</span><span class="s1">'adj_close'</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">)</span> <span class="o">/</span> <span class="n">px</span><span class="p">[</span><span class="s1">'adj_close'</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
-<span class="n">data_daily</span> <span class="o">=</span> <span class="n">daily</span><span class="o">.</span><span class="n">replace</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-
-<span class="n">X_daily</span> <span class="o">=</span> <span class="n">data_daily</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">'target_fwd_ret_5d'</span><span class="p">])</span>
-<span class="n">y_daily</span> <span class="o">=</span> <span class="n">data_daily</span><span class="p">[</span><span class="s1">'target_fwd_ret_5d'</span><span class="p">]</span>
-<span class="n">X_daily</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<span class="n">adj_close</span> <span class="o">=</span> <span class="n">download_adjusted_close_panel</span><span class="p">(</span><span class="n">UNIVERSE</span><span class="p">,</span> <span class="n">START</span><span class="p">,</span> <span class="n">END</span><span class="p">)</span>
+<span class="n">adj_close</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -8134,20 +8103,22 @@ We then rank the features and compare predictive performance as the feature set 
 <thead>
 <tr style="text-align: right;">
 <th></th>
-<th>ret_1d</th>
-<th>log_ret_1d</th>
-<th>mom_5d</th>
-<th>vol_5d</th>
-<th>mom_21d</th>
-<th>vol_21d</th>
-<th>mom_63d</th>
-<th>vol_63d</th>
-<th>drawdown</th>
-<th>pe</th>
-<th>pb</th>
+<th>AAPL</th>
+<th>AMZN</th>
+<th>GOOG</th>
+<th>HD</th>
+<th>JNJ</th>
+<th>JPM</th>
+<th>META</th>
+<th>MSFT</th>
+<th>NVDA</th>
+<th>PG</th>
+<th>UNH</th>
+<th>XOM</th>
 </tr>
 <tr>
 <th>Date</th>
+<th></th>
 <th></th>
 <th></th>
 <th></th>
@@ -8163,74 +8134,79 @@ We then rank the features and compare predictive performance as the feature set 
 </thead>
 <tbody>
 <tr>
-<th>2024-10-01</th>
-<td>-0.029142</td>
-<td>-0.029575</td>
-<td>-0.005102</td>
-<td>0.018809</td>
-<td>-0.012183</td>
-<td>0.015860</td>
-<td>0.028156</td>
-<td>0.014754</td>
-<td>-0.035551</td>
-<td>93.504825</td>
-<td>50.885741</td>
+<th>2026-02-23</th>
+<td>266.179993</td>
+<td>205.270004</td>
+<td>311.470581</td>
+<td>374.486328</td>
+<td>244.539993</td>
+<td>297.670013</td>
+<td>637.250000</td>
+<td>384.470001</td>
+<td>191.539642</td>
+<td>165.169998</td>
+<td>280.161926</td>
+<td>150.759995</td>
 </tr>
 <tr>
-<th>2024-10-02</th>
-<td>0.002520</td>
-<td>0.002517</td>
-<td>0.001811</td>
-<td>0.018739</td>
-<td>0.018001</td>
-<td>0.014633</td>
-<td>0.024791</td>
-<td>0.014741</td>
-<td>-0.033121</td>
-<td>93.740433</td>
-<td>51.013960</td>
+<th>2026-02-24</th>
+<td>272.140015</td>
+<td>208.559998</td>
+<td>310.701141</td>
+<td>381.926605</td>
+<td>246.279999</td>
+<td>297.299988</td>
+<td>639.299988</td>
+<td>389.000000</td>
+<td>192.839569</td>
+<td>165.279999</td>
+<td>271.836670</td>
+<td>149.259995</td>
 </tr>
 <tr>
-<th>2024-10-03</th>
-<td>-0.004895</td>
-<td>-0.004907</td>
-<td>-0.008131</td>
-<td>0.018661</td>
-<td>0.021825</td>
-<td>0.014533</td>
-<td>-0.001806</td>
-<td>0.014505</td>
-<td>-0.037854</td>
-<td>93.281611</td>
-<td>50.764267</td>
+<th>2026-02-25</th>
+<td>274.230011</td>
+<td>210.639999</td>
+<td>312.809631</td>
+<td>373.075775</td>
+<td>245.169998</td>
+<td>303.299988</td>
+<td>653.690002</td>
+<td>400.600006</td>
+<td>195.549408</td>
+<td>163.389999</td>
+<td>282.007599</td>
+<td>149.059998</td>
 </tr>
 <tr>
-<th>2024-10-04</th>
-<td>0.005007</td>
-<td>0.004995</td>
-<td>-0.004346</td>
-<td>0.018875</td>
-<td>0.019876</td>
-<td>0.014501</td>
-<td>-0.003325</td>
-<td>0.014495</td>
-<td>-0.033036</td>
-<td>93.748705</td>
-<td>51.018461</td>
+<th>2026-02-26</th>
+<td>272.950012</td>
+<td>207.919998</td>
+<td>306.933777</td>
+<td>372.598938</td>
+<td>243.470001</td>
+<td>306.130005</td>
+<td>657.010010</td>
+<td>401.720001</td>
+<td>184.879990</td>
+<td>163.750000</td>
+<td>284.448608</td>
+<td>148.539993</td>
 </tr>
 <tr>
-<th>2024-10-07</th>
-<td>-0.022531</td>
-<td>-0.022789</td>
-<td>-0.048541</td>
-<td>0.015258</td>
-<td>0.003940</td>
-<td>0.015305</td>
-<td>-0.029445</td>
-<td>0.014762</td>
-<td>-0.054822</td>
-<td>91.636462</td>
-<td>49.868970</td>
+<th>2026-02-27</th>
+<td>264.179993</td>
+<td>210.000000</td>
+<td>311.210754</td>
+<td>378.191559</td>
+<td>248.429993</td>
+<td>300.299988</td>
+<td>648.179993</td>
+<td>392.739990</td>
+<td>177.180420</td>
+<td>167.199997</td>
+<td>291.007599</td>
+<td>152.500000</td>
 </tr>
 </tbody>
 </table>
@@ -8239,7 +8215,19 @@ We then rank the features and compare predictive performance as the feature set 
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=7e92b139">
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e2b10e1e">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h3 id="Monthly-Features">Monthly Features<a class="anchor-link" href="#Monthly-Features">¶</a></h3><p>We compute the daily features first and then sample them at month end.
+This ensures that the signal at each rebalance date depends only on information available at that time.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a49722b3">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8247,19 +8235,22 @@ We then rank the features and compare predictive performance as the feature set 
 <div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">f_scores</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">f_regression</span><span class="p">(</span><span class="n">X_daily</span><span class="p">,</span> <span class="n">y_daily</span><span class="p">)</span>
-<span class="n">mi_scores</span> <span class="o">=</span> <span class="n">mutual_info_regression</span><span class="p">(</span><span class="n">X_daily</span><span class="p">,</span> <span class="n">y_daily</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">daily_ret</span> <span class="o">=</span> <span class="n">adj_close</span><span class="o">.</span><span class="n">pct_change</span><span class="p">()</span>
+<span class="n">mom_12m</span> <span class="o">=</span> <span class="n">adj_close</span><span class="o">.</span><span class="n">pct_change</span><span class="p">(</span><span class="mi">252</span><span class="p">)</span>
+<span class="n">mom_3m</span> <span class="o">=</span> <span class="n">adj_close</span><span class="o">.</span><span class="n">pct_change</span><span class="p">(</span><span class="mi">63</span><span class="p">)</span>
+<span class="n">vol_3m</span> <span class="o">=</span> <span class="n">daily_ret</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="mi">63</span><span class="p">)</span><span class="o">.</span><span class="n">std</span><span class="p">()</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">252</span><span class="p">)</span>
+<span class="n">drawdown_6m</span> <span class="o">=</span> <span class="n">adj_close</span> <span class="o">/</span> <span class="n">adj_close</span><span class="o">.</span><span class="n">rolling</span><span class="p">(</span><span class="mi">126</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span>
 
-<span class="n">ranking_daily</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
-    <span class="s1">'feature'</span><span class="p">:</span> <span class="n">X_daily</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span>
-    <span class="s1">'f_score'</span><span class="p">:</span> <span class="n">f_scores</span><span class="p">,</span>
-    <span class="s1">'mi_score'</span><span class="p">:</span> <span class="n">mi_scores</span><span class="p">,</span>
-<span class="p">})</span>
-<span class="n">ranking_daily</span><span class="p">[</span><span class="s1">'rank_f'</span><span class="p">]</span> <span class="o">=</span> <span class="n">ranking_daily</span><span class="p">[</span><span class="s1">'f_score'</span><span class="p">]</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">'average'</span><span class="p">)</span>
-<span class="n">ranking_daily</span><span class="p">[</span><span class="s1">'rank_mi'</span><span class="p">]</span> <span class="o">=</span> <span class="n">ranking_daily</span><span class="p">[</span><span class="s1">'mi_score'</span><span class="p">]</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">'average'</span><span class="p">)</span>
-<span class="n">ranking_daily</span><span class="p">[</span><span class="s1">'combined_rank'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">ranking_daily</span><span class="p">[</span><span class="s1">'rank_f'</span><span class="p">]</span> <span class="o">+</span> <span class="n">ranking_daily</span><span class="p">[</span><span class="s1">'rank_mi'</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
-<span class="n">ranking_daily</span> <span class="o">=</span> <span class="n">ranking_daily</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">'combined_rank'</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">ranking_daily</span>
+<span class="n">features_monthly</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">'mom_12m'</span><span class="p">:</span> <span class="n">mom_12m</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s1">'ME'</span><span class="p">)</span><span class="o">.</span><span class="n">last</span><span class="p">(),</span>
+    <span class="s1">'mom_3m'</span><span class="p">:</span> <span class="n">mom_3m</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s1">'ME'</span><span class="p">)</span><span class="o">.</span><span class="n">last</span><span class="p">(),</span>
+    <span class="s1">'vol_3m'</span><span class="p">:</span> <span class="n">vol_3m</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s1">'ME'</span><span class="p">)</span><span class="o">.</span><span class="n">last</span><span class="p">(),</span>
+    <span class="s1">'drawdown_6m'</span><span class="p">:</span> <span class="n">drawdown_6m</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s1">'ME'</span><span class="p">)</span><span class="o">.</span><span class="n">last</span><span class="p">(),</span>
+<span class="p">}</span>
+
+<span class="n">monthly_price</span> <span class="o">=</span> <span class="n">adj_close</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="s1">'ME'</span><span class="p">)</span><span class="o">.</span><span class="n">last</span><span class="p">()</span>
+<span class="n">future_ret_1m</span> <span class="o">=</span> <span class="n">monthly_price</span><span class="o">.</span><span class="n">pct_change</span><span class="p">()</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">features_monthly</span><span class="p">[</span><span class="s1">'mom_12m'</span><span class="p">]</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -8290,113 +8281,110 @@ We then rank the features and compare predictive performance as the feature set 
 <thead>
 <tr style="text-align: right;">
 <th></th>
-<th>feature</th>
-<th>f_score</th>
-<th>mi_score</th>
-<th>rank_f</th>
-<th>rank_mi</th>
-<th>combined_rank</th>
+<th>AAPL</th>
+<th>AMZN</th>
+<th>GOOG</th>
+<th>HD</th>
+<th>JNJ</th>
+<th>JPM</th>
+<th>META</th>
+<th>MSFT</th>
+<th>NVDA</th>
+<th>PG</th>
+<th>UNH</th>
+<th>XOM</th>
+</tr>
+<tr>
+<th>Date</th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<th>0</th>
-<td>pb</td>
-<td>28.372708</td>
-<td>0.259856</td>
-<td>1.0</td>
-<td>2.0</td>
-<td>1.5</td>
+<th>2025-10-31</th>
+<td>0.162444</td>
+<td>0.279778</td>
+<td>0.653929</td>
+<td>-0.016404</td>
+<td>0.217911</td>
+<td>0.425330</td>
+<td>0.096259</td>
+<td>0.207773</td>
+<td>0.433969</td>
+<td>-0.076731</td>
+<td>-0.379205</td>
+<td>0.010359</td>
 </tr>
 <tr>
-<th>1</th>
-<td>pe</td>
-<td>12.422412</td>
-<td>0.271027</td>
-<td>3.0</td>
-<td>1.0</td>
-<td>2.0</td>
+<th>2025-11-30</th>
+<td>0.202865</td>
+<td>0.157707</td>
+<td>0.897663</td>
+<td>-0.147639</td>
+<td>0.379928</td>
+<td>0.277349</td>
+<td>0.150196</td>
+<td>0.183504</td>
+<td>0.301652</td>
+<td>-0.142711</td>
+<td>-0.443867</td>
+<td>0.001704</td>
 </tr>
 <tr>
-<th>2</th>
-<td>drawdown</td>
-<td>7.921999</td>
-<td>0.212520</td>
-<td>4.0</td>
-<td>3.0</td>
-<td>3.5</td>
+<th>2025-12-31</th>
+<td>0.068467</td>
+<td>0.031598</td>
+<td>0.623488</td>
+<td>-0.102279</td>
+<td>0.470423</td>
+<td>0.364353</td>
+<td>0.103969</td>
+<td>0.131600</td>
+<td>0.361587</td>
+<td>-0.132329</td>
+<td>-0.336772</td>
+<td>0.171644</td>
 </tr>
 <tr>
-<th>3</th>
-<td>mom_21d</td>
-<td>7.029405</td>
-<td>0.091762</td>
-<td>5.0</td>
-<td>5.0</td>
-<td>5.0</td>
+<th>2026-01-31</th>
+<td>0.088960</td>
+<td>0.009406</td>
+<td>0.723542</td>
+<td>-0.071334</td>
+<td>0.549496</td>
+<td>0.170989</td>
+<td>0.062483</td>
+<td>-0.020043</td>
+<td>0.545532</td>
+<td>-0.061932</td>
+<td>-0.453640</td>
+<td>0.348942</td>
 </tr>
 <tr>
-<th>4</th>
-<td>mom_5d</td>
-<td>18.259156</td>
-<td>0.000000</td>
-<td>2.0</td>
-<td>11.0</td>
-<td>6.5</td>
-</tr>
-<tr>
-<th>5</th>
-<td>vol_21d</td>
-<td>0.676200</td>
-<td>0.144032</td>
-<td>9.0</td>
-<td>4.0</td>
-<td>6.5</td>
-</tr>
-<tr>
-<th>6</th>
-<td>vol_5d</td>
-<td>3.515585</td>
-<td>0.079588</td>
-<td>6.0</td>
-<td>8.0</td>
-<td>7.0</td>
-</tr>
-<tr>
-<th>7</th>
-<td>ret_1d</td>
-<td>0.934221</td>
-<td>0.062242</td>
-<td>8.0</td>
-<td>9.0</td>
-<td>8.5</td>
-</tr>
-<tr>
-<th>8</th>
-<td>log_ret_1d</td>
-<td>0.951112</td>
-<td>0.061004</td>
-<td>7.0</td>
-<td>10.0</td>
-<td>8.5</td>
-</tr>
-<tr>
-<th>9</th>
-<td>mom_63d</td>
-<td>0.003459</td>
-<td>0.091008</td>
-<td>11.0</td>
-<td>6.0</td>
-<td>8.5</td>
-</tr>
-<tr>
-<th>10</th>
-<td>vol_63d</td>
-<td>0.592641</td>
-<td>0.089446</td>
-<td>10.0</td>
-<td>7.0</td>
-<td>8.5</td>
+<th>2026-02-28</th>
+<td>0.103892</td>
+<td>-0.020294</td>
+<td>0.789596</td>
+<td>-0.000687</td>
+<td>0.565807</td>
+<td>0.184194</td>
+<td>-0.034846</td>
+<td>-0.009965</td>
+<td>0.350080</td>
+<td>0.002851</td>
+<td>-0.351815</td>
+<td>0.441073</td>
 </tr>
 </tbody>
 </table>
@@ -8406,19 +8394,20 @@ We then rank the features and compare predictive performance as the feature set 
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ab6621e8">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c9f411c5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>The table above is a screening table.
-It is useful because it reduces the candidate set before more expensive validation.
-It is limited because it ignores interactions, redundancy, and changes across time.</p>
+<h3 id="Signal-Construction">Signal Construction<a class="anchor-link" href="#Signal-Construction">¶</a></h3><p>The signal here is intentionally simple.
+Higher momentum and milder drawdown receive higher rank.
+Higher volatility receives lower rank.
+The final signal is a weighted average of these cross-sectional ranks.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b1dbec27">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=058f392a">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8426,38 +8415,19 @@ It is limited because it ignores interactions, redundancy, and changes across ti
 <div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">walk_forward_regression</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
-    <span class="n">tscv</span> <span class="o">=</span> <span class="n">TimeSeriesSplit</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="n">n_splits</span><span class="p">)</span>
-    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">fold</span><span class="p">,</span> <span class="p">(</span><span class="n">train_idx</span><span class="p">,</span> <span class="n">test_idx</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tscv</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-        <span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">train_idx</span><span class="p">],</span> <span class="n">X</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">test_idx</span><span class="p">]</span>
-        <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">train_idx</span><span class="p">],</span> <span class="n">y</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">test_idx</span><span class="p">]</span>
-        <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
-        <span class="n">pred</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
-        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-            <span class="s1">'fold'</span><span class="p">:</span> <span class="n">fold</span><span class="p">,</span>
-            <span class="s1">'rmse'</span><span class="p">:</span> <span class="n">mean_squared_error</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">pred</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">,</span>
-            <span class="s1">'r2'</span><span class="p">:</span> <span class="n">r2_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">pred</span><span class="p">),</span>
-            <span class="s1">'sign_accuracy'</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">pred</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">y_test</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
-        <span class="p">})</span>
-    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">cross_section_rank</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">df</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pct</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="n">ascending</span><span class="p">)</span>
 
 
-<span class="n">top_counts</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="n">X_daily</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">X_daily</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
-<span class="n">top_counts</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">top_counts</span><span class="p">))</span>
-<span class="n">selection_summary</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">signal</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="mf">0.45</span> <span class="o">*</span> <span class="n">cross_section_rank</span><span class="p">(</span><span class="n">features_monthly</span><span class="p">[</span><span class="s1">'mom_12m'</span><span class="p">],</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="o">+</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="n">cross_section_rank</span><span class="p">(</span><span class="n">features_monthly</span><span class="p">[</span><span class="s1">'mom_3m'</span><span class="p">],</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="o">+</span> <span class="mf">0.15</span> <span class="o">*</span> <span class="n">cross_section_rank</span><span class="p">(</span><span class="n">features_monthly</span><span class="p">[</span><span class="s1">'drawdown_6m'</span><span class="p">],</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="o">-</span> <span class="mf">0.15</span> <span class="o">*</span> <span class="n">cross_section_rank</span><span class="p">(</span><span class="n">features_monthly</span><span class="p">[</span><span class="s1">'vol_3m'</span><span class="p">],</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="p">)</span>
 
-<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">top_counts</span><span class="p">:</span>
-    <span class="n">chosen</span> <span class="o">=</span> <span class="n">ranking_daily</span><span class="p">[</span><span class="s1">'feature'</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-    <span class="n">scores</span> <span class="o">=</span> <span class="n">walk_forward_regression</span><span class="p">(</span><span class="n">X_daily</span><span class="p">[</span><span class="n">chosen</span><span class="p">],</span> <span class="n">y_daily</span><span class="p">,</span> <span class="n">Ridge</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">))</span>
-    <span class="n">selection_summary</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-        <span class="s1">'feature_set'</span><span class="p">:</span> <span class="sa">f</span><span class="s1">'top_</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span>
-        <span class="s1">'rmse'</span><span class="p">:</span> <span class="n">scores</span><span class="p">[</span><span class="s1">'rmse'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
-        <span class="s1">'r2'</span><span class="p">:</span> <span class="n">scores</span><span class="p">[</span><span class="s1">'r2'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
-        <span class="s1">'sign_accuracy'</span><span class="p">:</span> <span class="n">scores</span><span class="p">[</span><span class="s1">'sign_accuracy'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
-    <span class="p">})</span>
-
-<span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">selection_summary</span><span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">'rmse'</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">signal</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">how</span><span class="o">=</span><span class="s1">'all'</span><span class="p">)</span>
+<span class="n">signal</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -8488,40 +8458,110 @@ It is limited because it ignores interactions, redundancy, and changes across ti
 <thead>
 <tr style="text-align: right;">
 <th></th>
-<th>feature_set</th>
-<th>rmse</th>
-<th>r2</th>
-<th>sign_accuracy</th>
+<th>AAPL</th>
+<th>AMZN</th>
+<th>GOOG</th>
+<th>HD</th>
+<th>JNJ</th>
+<th>JPM</th>
+<th>META</th>
+<th>MSFT</th>
+<th>NVDA</th>
+<th>PG</th>
+<th>UNH</th>
+<th>XOM</th>
+</tr>
+<tr>
+<th>Date</th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<th>0</th>
-<td>top_5</td>
-<td>0.046920</td>
-<td>-0.308405</td>
-<td>0.473077</td>
+<th>2025-10-31</th>
+<td>0.470833</td>
+<td>0.537500</td>
+<td>0.737500</td>
+<td>0.137500</td>
+<td>0.508333</td>
+<td>0.541667</td>
+<td>0.095833</td>
+<td>0.329167</td>
+<td>0.566667</td>
+<td>0.183333</td>
+<td>0.141667</td>
+<td>0.300000</td>
 </tr>
 <tr>
-<th>1</th>
-<td>top_8</td>
-<td>0.046929</td>
-<td>-0.308613</td>
-<td>0.473077</td>
+<th>2025-11-30</th>
+<td>0.591667</td>
+<td>0.300000</td>
+<td>0.700000</td>
+<td>0.066667</td>
+<td>0.745833</td>
+<td>0.554167</td>
+<td>0.108333</td>
+<td>0.383333</td>
+<td>0.366667</td>
+<td>0.212500</td>
+<td>0.175000</td>
+<td>0.345833</td>
 </tr>
 <tr>
-<th>2</th>
-<td>top_3</td>
-<td>0.047044</td>
-<td>-0.318992</td>
-<td>0.484615</td>
+<th>2025-12-31</th>
+<td>0.425000</td>
+<td>0.279167</td>
+<td>0.712500</td>
+<td>0.058333</td>
+<td>0.741667</td>
+<td>0.583333</td>
+<td>0.154167</td>
+<td>0.300000</td>
+<td>0.387500</td>
+<td>0.195833</td>
+<td>0.091667</td>
+<td>0.620833</td>
 </tr>
 <tr>
-<th>3</th>
-<td>top_11</td>
-<td>0.049712</td>
-<td>-0.525411</td>
-<td>0.480769</td>
+<th>2026-01-31</th>
+<td>0.404167</td>
+<td>0.350000</td>
+<td>0.750000</td>
+<td>0.162500</td>
+<td>0.741667</td>
+<td>0.458333</td>
+<td>0.233333</td>
+<td>0.095833</td>
+<td>0.412500</td>
+<td>0.354167</td>
+<td>-0.058333</td>
+<td>0.645833</td>
+</tr>
+<tr>
+<th>2026-02-28</th>
+<td>0.395833</td>
+<td>0.125000</td>
+<td>0.591667</td>
+<td>0.437500</td>
+<td>0.772917</td>
+<td>0.400000</td>
+<td>0.166667</td>
+<td>0.070833</td>
+<td>0.408333</td>
+<td>0.552083</td>
+<td>-0.045833</td>
+<td>0.675000</td>
 </tr>
 </tbody>
 </table>
@@ -8531,30 +8571,18 @@ It is limited because it ignores interactions, redundancy, and changes across ti
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6abfe315">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9891296b">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p><strong>Exercise.</strong> Why might the feature set with the best univariate ranking fail to produce the best multivariate model?</p>
+<h3 id="Portfolio-Mapping">Portfolio Mapping<a class="anchor-link" href="#Portfolio-Mapping">¶</a></h3><p>At each rebalance date, we buy the three highest-ranked names and short the three lowest-ranked names.
+The portfolio is dollar-neutral by construction.</p>
 </div>
 </div>
 </div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=80d97e64">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<div class="lecture-pagebreak"></div>
-<h2 id="Stability-Across-Time">Stability Across Time<a class="anchor-link" href="#Stability-Across-Time">¶</a></h2><p>A feature that ranks well over the full sample may do so only because of one favorable period.
-It is therefore useful to check whether a feature retains its rank across rolling subsamples.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=9cddbfb8">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=4750f6fc">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8562,30 +8590,35 @@ It is therefore useful to check whether a feature retains its rank across rollin
 <div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">windows</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="n">split_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">X_daily</span><span class="p">)),</span> <span class="mi">4</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">top_n</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">bottom_n</span> <span class="o">=</span> <span class="mi">3</span>
 
-<span class="k">for</span> <span class="n">window_id</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">split_points</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-    <span class="n">X_window</span> <span class="o">=</span> <span class="n">X_daily</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-    <span class="n">y_window</span> <span class="o">=</span> <span class="n">y_daily</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">X_window</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">50</span><span class="p">:</span>
+<span class="n">weights</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">signal</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">signal</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">dt</span> <span class="ow">in</span> <span class="n">signal</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+    <span class="n">row</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">dt</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">sort_values</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">top_n</span> <span class="o">+</span> <span class="n">bottom_n</span><span class="p">:</span>
         <span class="k">continue</span>
-    <span class="n">f_scores_w</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">f_regression</span><span class="p">(</span><span class="n">X_window</span><span class="p">,</span> <span class="n">y_window</span><span class="p">)</span>
-    <span class="n">mi_scores_w</span> <span class="o">=</span> <span class="n">mutual_info_regression</span><span class="p">(</span><span class="n">X_window</span><span class="p">,</span> <span class="n">y_window</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
-    <span class="n">temp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
-        <span class="s1">'feature'</span><span class="p">:</span> <span class="n">X_daily</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span>
-        <span class="s1">'window'</span><span class="p">:</span> <span class="n">window_id</span><span class="p">,</span>
-        <span class="s1">'f_score'</span><span class="p">:</span> <span class="n">f_scores_w</span><span class="p">,</span>
-        <span class="s1">'mi_score'</span><span class="p">:</span> <span class="n">mi_scores_w</span><span class="p">,</span>
-    <span class="p">})</span>
-    <span class="n">temp</span><span class="p">[</span><span class="s1">'rank_f'</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span><span class="p">[</span><span class="s1">'f_score'</span><span class="p">]</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">'average'</span><span class="p">)</span>
-    <span class="n">temp</span><span class="p">[</span><span class="s1">'rank_mi'</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span><span class="p">[</span><span class="s1">'mi_score'</span><span class="p">]</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">'average'</span><span class="p">)</span>
-    <span class="n">temp</span><span class="p">[</span><span class="s1">'combined_rank'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="s1">'rank_f'</span><span class="p">]</span> <span class="o">+</span> <span class="n">temp</span><span class="p">[</span><span class="s1">'rank_mi'</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
-    <span class="n">windows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">temp</span><span class="p">[[</span><span class="s1">'feature'</span><span class="p">,</span> <span class="s1">'window'</span><span class="p">,</span> <span class="s1">'combined_rank'</span><span class="p">]])</span>
+    <span class="n">short_names</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">index</span><span class="p">[:</span><span class="n">bottom_n</span><span class="p">]</span>
+    <span class="n">long_names</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="n">top_n</span><span class="p">:]</span>
+    <span class="n">weights</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">dt</span><span class="p">,</span> <span class="n">long_names</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">top_n</span>
+    <span class="n">weights</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">dt</span><span class="p">,</span> <span class="n">short_names</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">bottom_n</span>
 
-<span class="n">rank_stability</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">windows</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">stability_summary</span> <span class="o">=</span> <span class="n">rank_stability</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">'feature'</span><span class="p">)[</span><span class="s1">'combined_rank'</span><span class="p">]</span><span class="o">.</span><span class="n">agg</span><span class="p">([</span><span class="s1">'mean'</span><span class="p">,</span> <span class="s1">'std'</span><span class="p">])</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s1">'mean'</span><span class="p">,</span> <span class="s1">'std'</span><span class="p">])</span>
-<span class="n">stability_summary</span>
+<span class="n">aligned_future</span> <span class="o">=</span> <span class="n">future_ret_1m</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+<span class="n">portfolio_ret</span> <span class="o">=</span> <span class="p">(</span><span class="n">weights</span> <span class="o">*</span> <span class="n">aligned_future</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+<span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">portfolio_ret</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+
+<span class="n">turnover</span> <span class="o">=</span> <span class="n">weights</span><span class="o">.</span><span class="n">diff</span><span class="p">()</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">cumulative</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">portfolio_ret</span><span class="p">)</span><span class="o">.</span><span class="n">cumprod</span><span class="p">()</span>
+
+<span class="n">summary</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s1">'annualized_return'</span><span class="p">:</span> <span class="p">[</span><span class="mi">12</span> <span class="o">*</span> <span class="n">portfolio_ret</span><span class="o">.</span><span class="n">mean</span><span class="p">()],</span>
+    <span class="s1">'annualized_volatility'</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span> <span class="o">*</span> <span class="n">portfolio_ret</span><span class="o">.</span><span class="n">std</span><span class="p">()],</span>
+    <span class="s1">'sharpe_like_ratio'</span><span class="p">:</span> <span class="p">[(</span><span class="mi">12</span> <span class="o">*</span> <span class="n">portfolio_ret</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span> <span class="o">*</span> <span class="n">portfolio_ret</span><span class="o">.</span><span class="n">std</span><span class="p">())],</span>
+    <span class="s1">'hit_rate'</span><span class="p">:</span> <span class="p">[(</span><span class="n">portfolio_ret</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()],</span>
+    <span class="s1">'average_turnover'</span><span class="p">:</span> <span class="p">[</span><span class="n">turnover</span><span class="o">.</span><span class="n">mean</span><span class="p">()],</span>
+<span class="p">})</span>
+<span class="n">summary</span>
 </pre></div>
 </div>
 </div>
@@ -8616,70 +8649,21 @@ It is therefore useful to check whether a feature retains its rank across rollin
 <thead>
 <tr style="text-align: right;">
 <th></th>
-<th>mean</th>
-<th>std</th>
-</tr>
-<tr>
-<th>feature</th>
-<th></th>
-<th></th>
+<th>annualized_return</th>
+<th>annualized_volatility</th>
+<th>sharpe_like_ratio</th>
+<th>hit_rate</th>
+<th>average_turnover</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<th>pe</th>
-<td>2.5000</td>
-<td>1.224745</td>
-</tr>
-<tr>
-<th>drawdown</th>
-<td>3.7500</td>
-<td>0.957427</td>
-</tr>
-<tr>
-<th>pb</th>
-<td>3.7500</td>
-<td>2.020726</td>
-</tr>
-<tr>
-<th>vol_21d</th>
-<td>5.2500</td>
-<td>2.254625</td>
-</tr>
-<tr>
-<th>vol_63d</th>
-<td>5.6250</td>
-<td>2.594064</td>
-</tr>
-<tr>
-<th>mom_21d</th>
-<td>5.6250</td>
-<td>2.780138</td>
-</tr>
-<tr>
-<th>vol_5d</th>
-<td>5.8750</td>
-<td>2.096624</td>
-</tr>
-<tr>
-<th>mom_63d</th>
-<td>6.3750</td>
-<td>2.358495</td>
-</tr>
-<tr>
-<th>mom_5d</th>
-<td>7.1250</td>
-<td>2.462214</td>
-</tr>
-<tr>
-<th>log_ret_1d</th>
-<td>9.9375</td>
-<td>0.718070</td>
-</tr>
-<tr>
-<th>ret_1d</th>
-<td>10.1875</td>
-<td>0.850857</td>
+<th>0</th>
+<td>0.056376</td>
+<td>0.256579</td>
+<td>0.219723</td>
+<td>0.545455</td>
+<td>0.693939</td>
 </tr>
 </tbody>
 </table>
@@ -8688,21 +8672,7 @@ It is therefore useful to check whether a feature retains its rank across rollin
 </div>
 </div>
 </div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=599ca56a">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<div class="lecture-pagebreak"></div>
-<h2 id="Example-B:-LOB-Feature-Screening">Example B: LOB Feature Screening<a class="anchor-link" href="#Example-B:-LOB-Feature-Screening">¶</a></h2><p>We repeat the same logic in the LOB setting.
-The aim is not to build a definitive high-frequency model.
-The aim is to show how screening and ablation ideas apply to event-time data.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=1c850cee">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=195b9a72">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8710,13 +8680,9 @@ The aim is to show how screening and ablation ideas apply to event-time data.</p
 <div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">lobster_dir</span> <span class="o">=</span> <span class="n">locate_lobster_sample</span><span class="p">()</span>
-<span class="n">lob</span> <span class="o">=</span> <span class="n">load_lobster_sample</span><span class="p">(</span><span class="n">lobster_dir</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-<span class="n">lob_feat</span> <span class="o">=</span> <span class="n">build_lob_event_features</span><span class="p">(</span><span class="n">lob</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-<span class="n">bars</span> <span class="o">=</span> <span class="n">build_lob_bars</span><span class="p">(</span><span class="n">lob_feat</span><span class="p">)</span>
-<span class="n">bars</span><span class="p">[</span><span class="s1">'target_up_1s'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">bars</span><span class="p">[</span><span class="s1">'mid'</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">bars</span><span class="p">[</span><span class="s1">'mid'</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-<span class="n">bars</span> <span class="o">=</span> <span class="n">bars</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="n">bars</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">ax</span> <span class="o">=</span> <span class="n">cumulative</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">title</span><span class="o">=</span><span class="s1">'Cumulative Return of the Illustrative Long-Short Portfolio'</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'Growth of $1'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -8726,442 +8692,74 @@ The aim is to show how screening and ablation ideas apply to event-time data.</p
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[6]:</div>
-<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
-<div>
-<style scoped="">
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-<thead>
-<tr style="text-align: right;">
-<th></th>
-<th>time_floor</th>
-<th>time</th>
-<th>bid_1</th>
-<th>bid_size_1</th>
-<th>ask_1</th>
-<th>ask_size_1</th>
-<th>mid</th>
-<th>spread</th>
-<th>spread_bps</th>
-<th>imbalance_l1</th>
-<th>imbalance_l5</th>
-<th>microprice_dev_bp</th>
-<th>ofi_l1</th>
-<th>ofi_l5</th>
-<th>signed_size</th>
-<th>msg_count</th>
-<th>time_sec</th>
-<th>time_str</th>
-<th>target_up_1s</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>0</th>
-<td>34200</td>
-<td>34200.918221</td>
-<td>5857400</td>
-<td>100</td>
-<td>5858700</td>
-<td>100</td>
-<td>5858050.0</td>
-<td>1300</td>
-<td>2.219168</td>
-<td>0.000000</td>
-<td>-0.673647</td>
-<td>0.000000</td>
-<td>82.0</td>
-<td>-2199.0</td>
-<td>-1167</td>
-<td>79</td>
-<td>34200</td>
-<td>0 days 09:30:00</td>
-<td>0</td>
-</tr>
-<tr>
-<th>1</th>
-<td>34201</td>
-<td>34201.840852</td>
-<td>5854700</td>
-<td>18</td>
-<td>5857700</td>
-<td>18</td>
-<td>5856200.0</td>
-<td>3000</td>
-<td>5.122776</td>
-<td>0.000000</td>
-<td>0.111111</td>
-<td>0.000000</td>
-<td>-326.0</td>
-<td>-3045.0</td>
-<td>915</td>
-<td>65</td>
-<td>34201</td>
-<td>0 days 09:30:01</td>
-<td>0</td>
-</tr>
-<tr>
-<th>2</th>
-<td>34202</td>
-<td>34202.756909</td>
-<td>5854700</td>
-<td>100</td>
-<td>5856800</td>
-<td>18</td>
-<td>5855750.0</td>
-<td>2100</td>
-<td>3.586219</td>
-<td>0.694915</td>
-<td>0.333333</td>
-<td>1.246059</td>
-<td>-144.0</td>
-<td>-1566.0</td>
-<td>396</td>
-<td>56</td>
-<td>34202</td>
-<td>0 days 09:30:02</td>
-<td>1</td>
-</tr>
-<tr>
-<th>3</th>
-<td>34203</td>
-<td>34203.954770</td>
-<td>5854500</td>
-<td>18</td>
-<td>5857100</td>
-<td>100</td>
-<td>5855800.0</td>
-<td>2600</td>
-<td>4.440042</td>
-<td>-0.694915</td>
-<td>-0.166861</td>
-<td>-1.542727</td>
-<td>70.0</td>
-<td>1200.0</td>
-<td>-10</td>
-<td>40</td>
-<td>34203</td>
-<td>0 days 09:30:03</td>
-<td>1</td>
-</tr>
-<tr>
-<th>4</th>
-<td>34204</td>
-<td>34204.894471</td>
-<td>5855000</td>
-<td>18</td>
-<td>5856800</td>
-<td>900</td>
-<td>5855900.0</td>
-<td>1800</td>
-<td>3.073823</td>
-<td>-0.960784</td>
-<td>-0.619938</td>
-<td>-1.476640</td>
-<td>-718.0</td>
-<td>173.0</td>
-<td>-972</td>
-<td>31</td>
-<td>34204</td>
-<td>0 days 09:30:04</td>
-<td>0</td>
-</tr>
-</tbody>
-</table>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedImage jp-OutputArea-output" tabindex="0">
+<img alt="No description has been provided for this image" class="" src="data:image/png;base64,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+rCF68MWro+6cJ3YwvVhC9eHLVwfgV8nEZf5he3Zo48+SvszK7hObOH6sIXrwxauj7pwndjC9WEL14ctXB+BXycRl/klhBBCCCGRS8RlfgkhhBBCSOTC4JcQQgghhEQMDH4JIYQQQkjEwOCXEEIIIYREDCEZ/KLVMbqJJCUlSdu2bVWbY3R9s6asrEz5zqH9cfPmzeUPf/iDZGdn2zznrrvukuHDh6vqQnSWs+exxx6TJk2a1LkkJiZKJK4P8P3338vJJ5+sPqtNmzbqffbt2yeRuj4+++wz9b+EhATp2rWrPPvssxKMeGOdbNiwQa688krVhadZs2bSr18/eemllxw2phk2bJhabz179pR3331XInV9HD58WKZNmya9e/dWDXb+9Kc/STDir/Xx1VdfyRlnnKGOHbAzGjNmjDqmROr6QKfScePGqffAc/r27SsvvPCCRPoxRPPLL79ITEyM0+NvJKwPHE8dxSHoiBup20d5ebn89a9/VedcnGfS09Nl7ty5ni2wKQSZMmWK6Z133jFt2rTJtH79etM555xj6tKli6mkpMTynFtuucWUlpZmWrRokWnNmjWmk08+2TR27Fib97nzzjtNr776qumaa64xDR48uM7nFBcXmw4fPmxz6d+/v2nGjBmmSFwfe/bsMcXFxZlmzpxp2rVrl2nt2rWmU0891TR06FBTJK6P7777zhQTE2P65z//adq9e7fpm2++MXXo0MH0yiuvmIINb6yTt99+23TXXXeZlixZor7vBx98YGrWrJnN98U2kpCQYLr33ntNW7ZsUf+Ljo42LViwwBSJ62Pv3r3qOe+9955pyJAhprvvvtsUjPhrfeD7P/3006Zff/3VtGPHDnUsadq0qWndunWmSFwf+N7z5s1Tn4NtBc/B/vPGG2+Ygg1/rRPNsWPHTN27dzedeeaZDo+/kbI+Fi9eDEcu0/bt221ikerqalOkbh/nn3++afTo0aaFCxeq/WbFihWm5cuXe7S8IRn82pOTk6M2jp9//lndLygoUAfUzz//3PKcrVu3quesXLmyzusfffRRt3Yu/KB4j6VLl5oicX3g9Qj2rHe6//znP6YmTZqYKioqTJG2Pq688krTJZdcYvPYyy+/bOrcubOppqbGFMw0dp1obrvtNtPEiRMt9x944AHTgAEDbJ5z+eWXqwNjJK4Pa0477bSgDX4D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"/>
 </div>
 </div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=79bd119c">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">feature_cols_lob</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'spread_bps'</span><span class="p">,</span> <span class="s1">'imbalance_l1'</span><span class="p">,</span> <span class="s1">'imbalance_l5'</span><span class="p">,</span> <span class="s1">'microprice_dev_bp'</span><span class="p">,</span> <span class="s1">'ofi_l1'</span><span class="p">,</span> <span class="s1">'ofi_l5'</span><span class="p">,</span> <span class="s1">'signed_size'</span><span class="p">,</span> <span class="s1">'msg_count'</span><span class="p">]</span>
-
-
-<span class="k">def</span> <span class="nf">walk_forward_auc</span><span class="p">(</span><span class="n">feature_frame</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">feature_names</span><span class="p">,</span> <span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
-    <span class="n">tscv</span> <span class="o">=</span> <span class="n">TimeSeriesSplit</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="n">n_splits</span><span class="p">)</span>
-    <span class="n">aucs</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">baccs</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">train_idx</span><span class="p">,</span> <span class="n">test_idx</span> <span class="ow">in</span> <span class="n">tscv</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">feature_frame</span><span class="p">):</span>
-        <span class="n">X_train</span> <span class="o">=</span> <span class="n">feature_frame</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">train_idx</span><span class="p">][</span><span class="n">feature_names</span><span class="p">]</span>
-        <span class="n">X_test</span> <span class="o">=</span> <span class="n">feature_frame</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">test_idx</span><span class="p">][</span><span class="n">feature_names</span><span class="p">]</span>
-        <span class="n">y_train</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">train_idx</span><span class="p">]</span>
-        <span class="n">y_test</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">test_idx</span><span class="p">]</span>
-        <span class="n">model</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">max_iter</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
-        <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
-        <span class="n">pred</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
-        <span class="n">prob</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X_test</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
-        <span class="n">aucs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">roc_auc_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">prob</span><span class="p">))</span>
-        <span class="n">baccs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">balanced_accuracy_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">pred</span><span class="p">))</span>
-    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">aucs</span><span class="p">)),</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">baccs</span><span class="p">))</span>
-
-
-<span class="n">lob_univariate</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="n">y_lob</span> <span class="o">=</span> <span class="n">bars</span><span class="p">[</span><span class="s1">'target_up_1s'</span><span class="p">]</span>
-<span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">feature_cols_lob</span><span class="p">:</span>
-    <span class="n">auc</span><span class="p">,</span> <span class="n">bacc</span> <span class="o">=</span> <span class="n">walk_forward_auc</span><span class="p">(</span><span class="n">bars</span><span class="p">[</span><span class="n">feature_cols_lob</span><span class="p">],</span> <span class="n">y_lob</span><span class="p">,</span> <span class="p">[</span><span class="n">feature</span><span class="p">])</span>
-    <span class="n">lob_univariate</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">'feature'</span><span class="p">:</span> <span class="n">feature</span><span class="p">,</span> <span class="s1">'auc'</span><span class="p">:</span> <span class="n">auc</span><span class="p">,</span> <span class="s1">'balanced_accuracy'</span><span class="p">:</span> <span class="n">bacc</span><span class="p">})</span>
-
-<span class="n">lob_univariate</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">lob_univariate</span><span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">'auc'</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">lob_univariate</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[7]:</div>
-<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
-<div>
-<style scoped="">
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-<thead>
-<tr style="text-align: right;">
-<th></th>
-<th>feature</th>
-<th>auc</th>
-<th>balanced_accuracy</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>0</th>
-<td>msg_count</td>
-<td>0.554703</td>
-<td>0.501571</td>
-</tr>
-<tr>
-<th>1</th>
-<td>imbalance_l1</td>
-<td>0.538607</td>
-<td>0.500000</td>
-</tr>
-<tr>
-<th>2</th>
-<td>microprice_dev_bp</td>
-<td>0.534970</td>
-<td>0.500000</td>
-</tr>
-<tr>
-<th>3</th>
-<td>ofi_l1</td>
-<td>0.524367</td>
-<td>0.500130</td>
-</tr>
-<tr>
-<th>4</th>
-<td>spread_bps</td>
-<td>0.506381</td>
-<td>0.500000</td>
-</tr>
-<tr>
-<th>5</th>
-<td>imbalance_l5</td>
-<td>0.502624</td>
-<td>0.500000</td>
-</tr>
-<tr>
-<th>6</th>
-<td>ofi_l5</td>
-<td>0.500580</td>
-<td>0.500000</td>
-</tr>
-<tr>
-<th>7</th>
-<td>signed_size</td>
-<td>0.494757</td>
-<td>0.499957</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=087b94a6">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">feature_sets</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">'base_book_state'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'spread_bps'</span><span class="p">,</span> <span class="s1">'imbalance_l1'</span><span class="p">],</span>
-    <span class="s1">'book_plus_depth'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'spread_bps'</span><span class="p">,</span> <span class="s1">'imbalance_l1'</span><span class="p">,</span> <span class="s1">'imbalance_l5'</span><span class="p">,</span> <span class="s1">'microprice_dev_bp'</span><span class="p">],</span>
-    <span class="s1">'book_plus_ofi'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'spread_bps'</span><span class="p">,</span> <span class="s1">'imbalance_l1'</span><span class="p">,</span> <span class="s1">'imbalance_l5'</span><span class="p">,</span> <span class="s1">'microprice_dev_bp'</span><span class="p">,</span> <span class="s1">'ofi_l1'</span><span class="p">,</span> <span class="s1">'ofi_l5'</span><span class="p">],</span>
-    <span class="s1">'full_set'</span><span class="p">:</span> <span class="n">feature_cols_lob</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="n">lob_set_summary</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">cols</span> <span class="ow">in</span> <span class="n">feature_sets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-    <span class="n">auc</span><span class="p">,</span> <span class="n">bacc</span> <span class="o">=</span> <span class="n">walk_forward_auc</span><span class="p">(</span><span class="n">bars</span><span class="p">[</span><span class="n">feature_cols_lob</span><span class="p">],</span> <span class="n">y_lob</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span>
-    <span class="n">lob_set_summary</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">'feature_set'</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span> <span class="s1">'auc'</span><span class="p">:</span> <span class="n">auc</span><span class="p">,</span> <span class="s1">'balanced_accuracy'</span><span class="p">:</span> <span class="n">bacc</span><span class="p">})</span>
-
-<span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">lob_set_summary</span><span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">'auc'</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[8]:</div>
-<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
-<div>
-<style scoped="">
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-<thead>
-<tr style="text-align: right;">
-<th></th>
-<th>feature_set</th>
-<th>auc</th>
-<th>balanced_accuracy</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>0</th>
-<td>full_set</td>
-<td>0.558731</td>
-<td>0.503890</td>
-</tr>
-<tr>
-<th>1</th>
-<td>book_plus_ofi</td>
-<td>0.539412</td>
-<td>0.500062</td>
-</tr>
-<tr>
-<th>2</th>
-<td>book_plus_depth</td>
-<td>0.534492</td>
-<td>0.500000</td>
-</tr>
-<tr>
-<th>3</th>
-<td>base_book_state</td>
-<td>0.528238</td>
-<td>0.500000</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=13dc6291">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a0bce6e8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>The LOB example makes the logic of ablation particularly clear.
-One may begin with a minimal description of the book state, then add depth, then add OFI, and ask whether each expansion improves out-of-sample performance.</p>
+<p><strong>Exercise.</strong> Which component of the signal above would you remove first if turnover were the primary concern? Explain your reasoning.</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=cac6beca">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8aa26640">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <div class="lecture-pagebreak"></div>
-<h2 id="What-Should-Be-Reported?">What Should Be Reported?<a class="anchor-link" href="#What-Should-Be-Reported?">¶</a></h2><p>When presenting a selected feature set, it is useful to report at least the following.</p>
+<h2 id="Interpreting-the-Example">Interpreting the Example<a class="anchor-link" href="#Interpreting-the-Example">¶</a></h2><p>Several caveats are important.</p>
 <ol>
-<li>The original candidate features.</li>
-<li>The screening criteria.</li>
-<li>The final selected subset.</li>
-<li>The validation scheme.</li>
-<li>The metric by which performance is judged.</li>
-<li>The incremental contribution of the selected features relative to a simpler baseline.</li>
+<li>The universe is small and survivorship-biased.</li>
+<li>No transaction cost model has been applied.</li>
+<li>The weights are intentionally simple.</li>
+<li>The signal weights were chosen for illustration rather than by a formal estimation procedure.</li>
 </ol>
-<p>This makes it easier to distinguish between a feature that is merely interesting and a feature that is useful for a forecasting problem.</p>
+<p>Even so, the example highlights the main distinction between a feature and a portfolio rule.
+A feature is a candidate piece of information. A signal specifies how that information is translated into a ranking and then into positions.</p>
+<h2 id="Signals-in-the-LOB-Setting">Signals in the LOB Setting<a class="anchor-link" href="#Signals-in-the-LOB-Setting">¶</a></h2><p>The same logic applies at shorter horizons.
+A model of next-price direction or a short-horizon imbalance measure is not yet a trading rule.
+One still needs to specify thresholds, inventory controls, latency assumptions, and a mapping from model output to actual orders.</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=46de106f">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=daa7ed77">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="Exercises">Exercises<a class="anchor-link" href="#Exercises">¶</a></h2><p><strong>Exercise 1.</strong> Give an example of a feature that ranks well by mutual information but might still be rejected for practical reasons.</p>
-<p><strong>Exercise 2.</strong> Suppose that two features have nearly identical combined rank values.
-What additional information would you want before choosing between them?</p>
-<p><strong>Exercise 3.</strong> In the LOB setting, why is it useful to compare a base book-state model to a base-plus-OFI model rather than jumping immediately to the full feature set?</p>
-<p><strong>Exercise 4.</strong> Explain why a feature-selection rule based on a shuffled train/test split is not appropriate in this setting.</p>
+<h2 id="Exercises">Exercises<a class="anchor-link" href="#Exercises">¶</a></h2><p><strong>Exercise 1.</strong> Modify the signal so that the long and short legs each contain five assets rather than three. How does turnover change?</p>
+<p><strong>Exercise 2.</strong> Replace the equal-weight portfolio rule with weights proportional to the distance of each score from the cross-sectional median. What practical issues arise?</p>
+<p><strong>Exercise 3.</strong> Suppose that the signal is computed using month-end prices but implemented at the close of the same day. Why might this introduce bias?</p>
+<p><strong>Exercise 4.</strong> Give an example of a feature that may be useful for stock selection but difficult to convert into a stable long-short signal.</p>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=fe9f0961">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0ee0cf53">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="References">References<a class="anchor-link" href="#References">¶</a></h2><ol>
-<li>Cont, Kukanov, and Stoikov (2013), <em>The Price Impact of Order Book Events</em>.</li>
-<li>Guyon and Elisseeff (2003), <em>An Introduction to Variable and Feature Selection</em>.</li>
+<li>Grinold and Kahn, <em>Active Portfolio Management</em>.</li>
+<li>Jegadeesh and Titman (1993), <em>Returns to Buying Winners and Selling Losers</em>.</li>
+<li>Cochrane, <em>Asset Pricing</em>.</li>
 <li>Lopez de Prado (2018), <em>Advances in Financial Machine Learning</em>.</li>
-<li>LOBSTER documentation and sample files.</li>
 </ol>
 </div>
 </div>
