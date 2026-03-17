@@ -18,9 +18,9 @@
 \pagestyle{fancy}
 \fancyhf{}
 \IfFileExists{lastpage.sty}{
-  \fancyfoot[C]{Financial Data Science II\ \ \ Updated March 17, 2026\ \ \ Page \thepage\ of \pageref{LastPage}}
+  \fancyfoot[C]{Financial Data Science II\ \ \ Updated March 18, 2026\ \ \ Page \thepage\ of \pageref{LastPage}}
 }{
-  \fancyfoot[C]{Financial Data Science II\ \ \ Updated March 17, 2026\ \ \ Page \thepage}
+  \fancyfoot[C]{Financial Data Science II\ \ \ Updated March 18, 2026\ \ \ Page \thepage}
 }
 
 \begin{document}
@@ -33,11 +33,11 @@ Parts 22 and 23 focused on constructing and screening candidate predictors. The
 next task is to map a selected feature set into a trading rule.
 
 A feature is not yet a signal. A signal is a rule for ranking opportunities or
-assigning positions. The same feature can produce very different portfolios
+assigning positions. The same feature can generate very different portfolios
 depending on how it is standardized, combined, and rebalanced.
 
-In this Part we use a simple cross-sectional example to illustrate this
-transition from features to positions.
+The example in this Part is intended only to illustrate the mechanics of this
+mapping.
 
 \textbf{Exercise.} Give an example of a quantity that is useful as a feature
 but not yet well defined as a trading signal. What additional choices are
@@ -105,11 +105,10 @@ A practical sequence is the following.
 \section*{An Illustrative Monthly Long-Short Signal}
 
 For illustration we use a small universe of large US equities. This is a
-convenience sample, not a survivorship-free universe. The point is to
-illustrate the mechanics of signal formation rather than to make strong claims
-about a production strategy.
+convenience sample, not a survivorship-free universe. The example is used only
+to illustrate the mechanics of signal formation.
 
-A simple signal can be constructed from three ingredients:
+A simple signal may be formed from three ingredients:
 
 \begin{enumerate}
   \item medium-horizon momentum
@@ -117,9 +116,8 @@ A simple signal can be constructed from three ingredients:
   \item volatility and drawdown penalties
 \end{enumerate}
 
-These ingredients may be ranked cross-sectionally and combined into a composite
-score. The portfolio rule then buys the highest-ranked names and shorts the
-lowest-ranked names.
+These ingredients may be combined into a composite score and then mapped into
+an equal-weight long-short portfolio.
 
 \section*{Interpreting the Example}
 

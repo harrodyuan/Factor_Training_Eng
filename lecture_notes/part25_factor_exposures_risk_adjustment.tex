@@ -1,0 +1,157 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fancyhdr}
+\IfFileExists{lastpage.sty}{\usepackage{lastpage}}{}
+\usepackage{hyperref}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+\setlist[itemize]{leftmargin=*}
+\setlist[enumerate]{leftmargin=*}
+
+\newcommand{\answerlines}[1]{\vspace{#1\baselineskip}}
+
+\pagestyle{fancy}
+\fancyhf{}
+\IfFileExists{lastpage.sty}{
+  \fancyfoot[C]{Financial Data Science II\ \ \ Updated March 18, 2026\ \ \ Page \thepage\ of \pageref{LastPage}}
+}{
+  \fancyfoot[C]{Financial Data Science II\ \ \ Updated March 18, 2026\ \ \ Page \thepage}
+}
+
+\begin{document}
+
+\begin{center}
+{\Large \textbf{Part 25: Factor Exposures and Risk Adjustment}}
+\end{center}
+
+A selected feature or signal may still be difficult to interpret if it is
+largely a disguised exposure to common risk factors. For that reason, it is
+often useful to ask how much of a signal's behavior is explained by broad
+factor movements and how much remains after risk adjustment.
+
+In this Part we use a simple rolling factor model to illustrate two ideas:
+
+\begin{enumerate}
+  \item estimating factor exposures
+  \item constructing a residual, or risk-adjusted, version of a signal
+\end{enumerate}
+
+\textbf{Exercise.} Why might a long-short strategy with strong raw returns
+still be disappointing if most of its performance comes from broad market
+exposure?
+
+\answerlines{6}
+
+\newpage
+
+\section*{Basic Terms}
+
+A \textbf{factor exposure} is the sensitivity of an asset or strategy to a
+common source of variation. A \textbf{beta} is a regression coefficient
+measuring this sensitivity. \textbf{Alpha} is the component of return not
+explained by the factor specification being used. A \textbf{residual return} is
+the realized return minus the fitted value from a factor model. A
+\textbf{risk-adjusted signal} is a signal formed after removing some common
+factor component.
+
+None of these quantities is model-free. They depend on the chosen factor set
+and estimation window.
+
+\textbf{Exercise.} Explain why the same stock can have different estimated
+factor exposures under different factor specifications.
+
+\answerlines{6}
+
+\newpage
+
+\section*{Why Risk Adjustment Matters}
+
+Risk adjustment is useful for at least three reasons.
+
+\begin{enumerate}
+  \item It helps distinguish common factor exposure from asset-specific information.
+  \item It provides a cleaner basis for comparing raw and residual signals.
+  \item It helps explain why a strategy behaves as it does during broad market moves.
+\end{enumerate}
+
+In practice one rarely removes all systematic variation. The point is to
+understand what the signal is loading on and whether those exposures are
+desired.
+
+\section*{An Illustrative Factor Set}
+
+For illustration we use the following proxy factors:
+
+\begin{enumerate}
+  \item \texttt{SPY} for the broad market
+  \item \texttt{IWM - SPY} as a size spread proxy
+  \item \texttt{IWD - IWF} as a value-versus-growth proxy
+\end{enumerate}
+
+These are only rough proxies, but they are sufficient for an instructional
+example.
+
+\newpage
+
+\section*{Rolling Exposures and Residual Returns}
+
+A rolling factor model produces two useful objects:
+
+\begin{enumerate}
+  \item estimated exposures through time
+  \item residual returns after removing the fitted factor component
+\end{enumerate}
+
+These may then be used to compare a raw momentum signal to a momentum signal
+built from residual returns.
+
+\section*{Interpreting the Comparison}
+
+If the residual portfolio has smaller factor loadings than the raw portfolio,
+then the adjustment has succeeded in reducing common-factor exposure under the
+chosen model. This does not imply that the residual portfolio is superior. It
+may have lower return, higher turnover, or less stable behavior.
+
+The main purpose of the exercise is diagnostic. It helps answer the question:
+is the signal primarily a repackaged factor bet, or does it retain some
+distinct component after adjustment?
+
+\newpage
+
+\section*{Exercises}
+
+\textbf{Exercise 1.} Change the rolling estimation window from 24 months to 36
+months. How do the exposure estimates change?
+
+\answerlines{6}
+
+\textbf{Exercise 2.} Replace the factor proxies with a different set of ETFs.
+Which results are most sensitive to this change?
+
+\answerlines{6}
+
+\textbf{Exercise 3.} Why is it useful to compare the factor exposures of the
+portfolio, rather than only the factor exposures of the individual stocks?
+
+\answerlines{6}
+
+\textbf{Exercise 4.} Give an example of a signal that might be attractive
+precisely because it carries a known factor exposure rather than despite it.
+
+\answerlines{6}
+
+\section*{References}
+
+\begin{enumerate}
+  \item Fama and French (1993), \textit{Common Risk Factors in the Returns on Stocks and Bonds}.
+  \item Grinold and Kahn, \textit{Active Portfolio Management}.
+  \item Cochrane, \textit{Asset Pricing}.
+  \item Lopez de Prado (2018), \textit{Advances in Financial Machine Learning}.
+\end{enumerate}
+
+\end{document}
