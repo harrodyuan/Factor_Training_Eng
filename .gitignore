@@ -17,3 +17,6 @@ __pycache__/
 lobster_samples/
 LOBSTER_*.zip
 .cache/
+
+# DS4FE downloaded data (run download_data.py to regenerate)
+DS4FE/data/
